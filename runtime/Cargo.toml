@@ -185,12 +185,12 @@ tag = 'v2.0.0-rc4'
 version = '2.0.0-rc4'
 
 [package]
-authors = ['']
+authors = ['Dan Forbes <dan@parity.io>']
 edition = '2018'
-homepage = ''
+homepage = 'https://github.com/danforbes/substrate-node-template/tree/nft'
 license = 'Unlicense'
 name = 'nft-node-runtime'
-repository = ''
+repository = 'https://github.com/danforbes/substrate-node-template/tree/nft'
 version = '2.0.0-rc4'
 [package.metadata.docs.rs]
 targets = ['x86_64-unknown-linux-gnu']

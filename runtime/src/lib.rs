@@ -1,5 +1,3 @@
-//! The Substrate Node Template runtime. This can be compiled with `#[no_std]`, ready for Wasm.
-
 #![cfg_attr(not(feature = "std"), no_std)]
 // `construct_runtime!` does a lot of recursion and requires us to increase the limit to 256.
 #![recursion_limit="256"]
@@ -40,7 +38,6 @@ pub use frame_support::{
 	},
 };
 
-/// Importing a local pallet
 pub use nft;
 
 /// An index to a block.
@@ -273,7 +270,6 @@ construct_runtime!(
 		Balances: balances::{Module, Call, Storage, Config<T>, Event<T>},
 		TransactionPayment: transaction_payment::{Module, Storage},
 		Sudo: sudo::{Module, Call, Config<T>, Storage, Event<T>},
-		// Used for the module nft in `./nft.rs`
 		Nft: nft::{Module, Call, Storage, Event<T>},
 	}
 );
