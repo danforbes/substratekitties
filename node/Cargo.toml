@@ -1,13 +1,22 @@
+[build-dependencies.substrate-build-script-utils]
+git = 'https://github.com/paritytech/substrate.git'
+tag = 'v2.0.0-rc3'
+version = '2.0.0-rc3'
+
+[[bin]]
+name = 'nft-node'
+
 [package]
-authors = ['Substrate DevHub <https://github.com/substrate-developer-hub>']
+authors = ['']
 build = 'build.rs'
-description = 'Substrate Node template'
+description = ''
 edition = '2018'
-homepage = 'https://substrate.dev'
+homepage = ''
 license = 'Unlicense'
-name = 'node-template'
-repository = 'https://github.com/substrate-developer-hub/substrate-node-template/'
+name = 'nft-node'
+repository = ''
 version = '2.0.0-rc4'
+
 [package.metadata.docs.rs]
 targets = ['x86_64-unknown-linux-gnu']
 
@@ -20,7 +29,7 @@ log = '0.4.8'
 parking_lot = '0.10.0'
 structopt = '0.3.8'
 
-[dependencies.node-template-runtime]
+[dependencies.nft-node-runtime]
 path = '../runtime'
 version = '2.0.0-rc4'
 

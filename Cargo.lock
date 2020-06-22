@@ -2758,25 +2758,24 @@ dependencies = [
 ]
 
 [[package]]
-name = "nix"
-version = "0.17.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "50e4785f2c3b7589a0d0c1dd60285e1188adac4006e8abd6dd578e1567027363"
+name = "nft"
+version = "2.0.0-rc3"
 dependencies = [
- "bitflags",
- "cc",
- "cfg-if",
- "libc",
- "void",
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
 ]
 
 [[package]]
-name = "node-template"
+name = "nft-node"
 version = "2.0.0-rc4"
 dependencies = [
  "futures 0.3.5",
  "log",
- "node-template-runtime",
+ "nft-node-runtime",
  "parking_lot 0.10.2",
  "sc-basic-authorship",
  "sc-cli",
@@ -2800,18 +2799,18 @@ dependencies = [
 ]
 
 [[package]]
-name = "node-template-runtime"
+name = "nft-node-runtime"
 version = "2.0.0-rc4"
 dependencies = [
  "frame-executive",
  "frame-support",
  "frame-system",
+ "nft",
  "pallet-aura",
  "pallet-balances",
  "pallet-grandpa",
  "pallet-randomness-collective-flip",
  "pallet-sudo",
- "pallet-template",
  "pallet-timestamp",
  "pallet-transaction-payment",
  "parity-scale-codec",
@@ -2829,6 +2828,19 @@ dependencies = [
  "sp-transaction-pool",
  "sp-version",
  "substrate-wasm-builder-runner",
+]
+
+[[package]]
+name = "nix"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "50e4785f2c3b7589a0d0c1dd60285e1188adac4006e8abd6dd578e1567027363"
+dependencies = [
+ "bitflags",
+ "cc",
+ "cfg-if",
+ "libc",
+ "void",
 ]
 
 [[package]]

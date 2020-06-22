@@ -52,7 +52,7 @@ impl system::Trait for Test {
 impl Trait for Test {
 	type Event = ();
 }
-pub type TemplateModule = Module<Test>;
+pub type Nft = Module<Test>;
 
 // This function basically just builds a genesis storage key/value store according to
 // our desired mockup.

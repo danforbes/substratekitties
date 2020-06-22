@@ -164,10 +164,10 @@ package = 'frame-system'
 tag = 'v2.0.0-rc4'
 version = '2.0.0-rc4'
 
-[dependencies.template]
+[dependencies.nft]
 default-features = false
-package = 'pallet-template'
-path = '../pallets/template'
+package = 'nft'
+path = '../pallets/nft'
 version = '2.0.0-rc4'
 
 [dependencies.timestamp]
@@ -185,12 +185,12 @@ tag = 'v2.0.0-rc4'
 version = '2.0.0-rc4'
 
 [package]
-authors = ['Substrate DevHub <https://github.com/substrate-developer-hub>']
+authors = ['']
 edition = '2018'
-homepage = 'https://substrate.dev'
+homepage = ''
 license = 'Unlicense'
-name = 'node-template-runtime'
-repository = 'https://github.com/substrate-developer-hub/substrate-node-template/'
+name = 'nft-node-runtime'
+repository = ''
 version = '2.0.0-rc4'
 [package.metadata.docs.rs]
 targets = ['x86_64-unknown-linux-gnu']
@@ -199,3 +199,33 @@ git = 'https://github.com/paritytech/substrate.git'
 package = 'substrate-wasm-builder-runner'
 tag = 'v2.0.0-rc4'
 version = '1.0.5'
+
+[features]
+default = ['std']
+std = [
+    'aura/std',
+    'balances/std',
+    'codec/std',
+    'frame-executive/std',
+    'frame-support/std',
+    'grandpa/std',
+    'randomness-collective-flip/std',
+    'serde',
+    'sp-api/std',
+    'sp-block-builder/std',
+    'sp-consensus-aura/std',
+    'sp-core/std',
+    'sp-inherents/std',
+    'sp-io/std',
+    'sp-offchain/std',
+    'sp-runtime/std',
+    'sp-session/std',
+    'sp-std/std',
+    'sp-transaction-pool/std',
+    'sp-version/std',
+    'sudo/std',
+    'system/std',
+    'timestamp/std',
+    'transaction-payment/std',
+    'nft/std'
+]
