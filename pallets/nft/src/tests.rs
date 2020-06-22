@@ -6,10 +6,7 @@ use frame_support::{assert_ok};
 #[test]
 fn it_works_for_default_value() {
 	new_test_ext().execute_with(|| {
-		// Just a dummy test for the dummy function `do_something`
-		// calling the `do_something` function with a value 42
-		assert_ok!(Nft::do_something(Origin::signed(1), 42));
-		// asserting that the stored value is equal to what we stored
-		assert_eq!(Nft::something(), Some(42));
+		assert_ok!(Nft::mint_nft(Origin::signed(1)));
+		assert_eq!(Nft::next_token_id(), 1);
 	});
 }

@@ -33,6 +33,12 @@ git = 'https://github.com/paritytech/substrate.git'
 tag = 'v2.0.0-rc3'
 version = '2.0.0-rc3'
 
+[dependencies.sp-std]
+git = 'https://github.com/paritytech/substrate.git'
+default-features = false
+tag = 'v2.0.0-rc3'
+version = '2.0.0-rc3'
+
 [package]
 authors = ['Dan Forbes <dan@parity.io>']
 description = 'An update to https://github.com/shawntabrizi/substratekitties.'
@@ -51,4 +57,5 @@ std = [
     'codec/std',
     'frame-support/std',
     'frame-system/std',
+    'sp-std/std',
 ]
