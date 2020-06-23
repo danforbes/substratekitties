@@ -53,7 +53,7 @@ impl system::Trait for Test {
 }
 impl Trait for Test {
     type Event = ();
-    type TokenId = u32;
+    type TokenInfo = Vec<u8>;
 }
 pub type Nft = Module<Test>;
 
