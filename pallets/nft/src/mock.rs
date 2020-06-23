@@ -53,9 +53,9 @@ impl system::Trait for Test {
 }
 impl Trait for Test {
     type Event = ();
-    type TokenInfo = Vec<u8>;
+    type AssetInfo = Vec<u8>;
 }
-pub type Nft = Module<Test>;
+pub type NFT = Module<Test>;
 
 // This function basically just builds a genesis storage key/value store according to
 // our desired mockup.

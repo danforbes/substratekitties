@@ -14,17 +14,17 @@ mod tests;
 
 pub trait Trait: system::Trait {
     type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
-    type TokenInfo: Hashable + Member + MaybeSerialize + Debug + Default + FullCodec;
+    type AssetInfo: Hashable + Member + MaybeSerialize + Debug + Default + FullCodec;
 }
 
 decl_storage! {
-    trait Store for Module<T: Trait> as Nft {
-        // Mapping from holder address to their (enumerable) set of owned tokens
-        TokensForAccount get(fn tokens_for_account): map hasher(blake2_128_concat) T::AccountId => Vec<Vec<u8>>;
-        // Mapping from token ID to the address that owns it
-        AccountForToken get(fn account_for_token): map hasher(identity) Vec<u8> => T::AccountId;
-        // Mapping from token ID to the info for that token
-        InfoForToken get(fn info_for_token): map hasher(identity) Vec<u8> => T::TokenInfo;
+    trait Store for Module<T: Trait> as NFT {
+        // Mapping from holder address to their (enumerable) set of owned assets
+        AssetsForAccount get(fn assets_for_account): map hasher(blake2_128_concat) T::AccountId => Vec<Vec<u8>>;
+        // Mapping from asset ID to the address that owns it
+        AccountForAsset get(fn account_for_asset): map hasher(identity) Vec<u8> => T::AccountId;
+        // Mapping from asset ID to the info for that asset
+        InfoForAsset get(fn info_for_asset): map hasher(identity) Vec<u8> => T::AssetInfo;
     }
 }
 
@@ -33,14 +33,14 @@ decl_event!(
     where
         AccountId = <T as system::Trait>::AccountId,
     {
-        TokenMinted(Vec<u8>, AccountId),
+        AssetMinted(Vec<u8>, AccountId),
     }
 );
 
 decl_error! {
     pub enum Error for Module<T: Trait> {
-        // The NFT already exists
-        NftAlreadyExists,
+        // The asset already exists
+        AssetExists,
     }
 }
 
@@ -51,18 +51,18 @@ decl_module! {
         fn deposit_event() = default;
 
         #[weight = 10_000]
-        pub fn mint_nft(origin) -> dispatch::DispatchResult {
+        pub fn mint_asset(origin) -> dispatch::DispatchResult {
             let who = ensure_signed(origin)?;
-            let token_info = T::TokenInfo::default();
-            let token_id = token_info.blake2_128_concat();
-            if InfoForToken::<T>::contains_key(&token_id) {
-                Err(Error::<T>::NftAlreadyExists)?;
+            let asset_info = T::AssetInfo::default();
+            let asset_id = asset_info.blake2_128_concat();
+            if InfoForAsset::<T>::contains_key(&asset_id) {
+                Err(Error::<T>::AssetExists)?;
             }
 
-            TokensForAccount::<T>::append(&who, &token_id);
-            AccountForToken::<T>::insert(&token_id, &who);
-            InfoForToken::<T>::insert(&token_id, token_info);
-            Self::deposit_event(RawEvent::TokenMinted(token_id, who));
+            AssetsForAccount::<T>::append(&who, &asset_id);
+            AccountForAsset::<T>::insert(&asset_id, &who);
+            InfoForAsset::<T>::insert(&asset_id, asset_info);
+            Self::deposit_event(RawEvent::AssetMinted(asset_id, who));
             Ok(())
         }
     }
