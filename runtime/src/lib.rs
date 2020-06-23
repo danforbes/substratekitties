@@ -6,6 +6,7 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
+use codec::{Encode, Decode};
 use grandpa::fg_primitives;
 use grandpa::{AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList};
 use sp_api::impl_runtime_apis;
@@ -19,7 +20,7 @@ use sp_runtime::{
     transaction_validity::{TransactionSource, TransactionValidity},
     ApplyExtrinsicResult, MultiSignature,
 };
-use sp_std::prelude::*;
+use sp_std::{fmt::Debug, prelude::*};
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
@@ -257,11 +258,17 @@ parameter_types! {
     pub const MaxAssetsPerUser: usize = 256;
 }
 
-/// Implement the nft pallet
+/// Implement the Substratekitties unique asset
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode, Default, Debug)]
+pub struct KittyInfo {
+    name: [u8; 32],
+    color: [u8; 3],
+}
+
 impl nft::Trait for Runtime {
     type Event = Event;
     type AssetAdmin = system::EnsureRoot<AccountId>;
-    type AssetInfo = Vec<u8>;
+    type AssetInfo = KittyInfo;
     type UserAssetLimit = MaxAssetsPerUser;
 }
 
