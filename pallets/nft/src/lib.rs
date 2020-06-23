@@ -1,8 +1,8 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::FullCodec;
-use frame_support::{decl_error, decl_event, decl_module, decl_storage, dispatch, Hashable};
-use frame_system::{self as system, ensure_signed};
+use frame_support::{decl_error, decl_event, decl_module, decl_storage, dispatch, Hashable, traits::EnsureOrigin};
+use frame_system::{self as system};
 use sp_runtime::traits::{MaybeSerialize, Member};
 use sp_std::{fmt::Debug, vec::Vec};
 
@@ -14,6 +14,7 @@ mod tests;
 
 pub trait Trait<I = DefaultInstance>: system::Trait {
     type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
+    type AssetAdmin: EnsureOrigin<Self::Origin>;
     type AssetInfo: Hashable + Member + MaybeSerialize + Debug + Default + FullCodec;
 }
 
@@ -51,18 +52,19 @@ decl_module! {
         fn deposit_event() = default;
 
         #[weight = 10_000]
-        pub fn mint_asset(origin) -> dispatch::DispatchResult {
-            let who = ensure_signed(origin)?;
+        pub fn mint_asset(origin, owner_account: T::AccountId, asset_info: T::AssetInfo) -> dispatch::DispatchResult {
+            T::AssetAdmin::ensure_origin(origin)?;
+
             let asset_info = T::AssetInfo::default();
             let asset_id = asset_info.blake2_128_concat();
             if InfoForAsset::<T, I>::contains_key(&asset_id) {
                 Err(Error::<T, I>::AssetExists)?;
             }
 
-            AssetsForAccount::<T, I>::append(&who, &asset_id);
-            AccountForAsset::<T, I>::insert(&asset_id, &who);
+            AssetsForAccount::<T, I>::append(&owner_account, &asset_id);
+            AccountForAsset::<T, I>::insert(&asset_id, &owner_account);
             InfoForAsset::<T, I>::insert(&asset_id, asset_info);
-            Self::deposit_event(RawEvent::AssetMinted(asset_id, who));
+            Self::deposit_event(RawEvent::AssetMinted(asset_id, owner_account));
             Ok(())
         }
     }
