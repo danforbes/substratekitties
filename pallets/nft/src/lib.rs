@@ -1,7 +1,11 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::FullCodec;
-use frame_support::{decl_error, decl_event, decl_module, decl_storage, dispatch, Hashable, traits::{Get, EnsureOrigin}};
+use frame_support::{
+    decl_error, decl_event, decl_module, decl_storage, dispatch,
+    traits::{EnsureOrigin, Get},
+    Hashable,
+};
 use frame_system::{self as system};
 use sp_runtime::traits::{MaybeSerialize, Member};
 use sp_std::{fmt::Debug, vec::Vec};

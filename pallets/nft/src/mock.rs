@@ -11,7 +11,7 @@ use sp_runtime::{
 };
 
 impl_outer_origin! {
-	pub enum Origin for Test where system = frame_system {}
+    pub enum Origin for Test where system = frame_system {}
 }
 
 // For testing the pallet, we construct most of a mock runtime. This means
@@ -51,10 +51,14 @@ impl system::Trait for Test {
 	type OnNewAccount = ();
 	type OnKilledAccount = ();
 }
+parameter_types! {
+    pub const MaxAssetsPerUser: usize = 256;
+}
 impl Trait for Test {
     type Event = ();
     type AssetAdmin = frame_system::EnsureRoot<Self::AccountId>;
     type AssetInfo = Vec<u8>;
+    type UserAssetLimit = MaxAssetsPerUser;
 }
 pub type NFT = Module<Test>;
 
