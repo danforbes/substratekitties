@@ -6,7 +6,7 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-use codec::{Encode, Decode};
+use codec::{Decode, Encode};
 use grandpa::fg_primitives;
 use grandpa::{AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList};
 use sp_api::impl_runtime_apis;
@@ -254,10 +254,6 @@ impl sudo::Trait for Runtime {
     type Call = Call;
 }
 
-parameter_types! {
-    pub const MaxAssetsPerUser: usize = 256;
-}
-
 /// Implement the Substratekitties unique asset
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode, Default, Debug)]
 pub struct KittyInfo {
@@ -265,11 +261,15 @@ pub struct KittyInfo {
     color: [u8; 3],
 }
 
+parameter_types! {
+    pub const MaxKittiesPerUser: usize = 256;
+}
+
 impl nft::Trait for Runtime {
     type Event = Event;
     type AssetAdmin = system::EnsureRoot<AccountId>;
     type AssetInfo = KittyInfo;
-    type UserAssetLimit = MaxAssetsPerUser;
+    type UserAssetLimit = MaxKittiesPerUser;
 }
 
 construct_runtime!(
@@ -286,7 +286,7 @@ construct_runtime!(
         Balances: balances::{Module, Call, Storage, Config<T>, Event<T>},
         TransactionPayment: transaction_payment::{Module, Storage},
         Sudo: sudo::{Module, Call, Config<T>, Storage, Event<T>},
-        Nft: nft::{Module, Call, Storage, Event<T>},
+        Substratekitties: nft::{Module, Call, Storage, Event<T>},
     }
 );
 
