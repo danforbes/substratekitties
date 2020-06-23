@@ -1,8 +1,10 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use frame_support::{decl_module, decl_storage, decl_event, decl_error, dispatch};
-use frame_system::{self as system, ensure_signed};
-use sp_std::vec::Vec;
+use codec::FullCodec;
+use frame_support::{decl_module, decl_storage, decl_event, decl_error, dispatch, Parameter,};
+use frame_system::{self as system, ensure_signed,};
+use sp_runtime::traits::{AtLeast32Bit, CheckedAdd, MaybeDisplay, MaybeSerialize, Member,};
+use sp_std::{fmt::Debug, vec::Vec,};
 
 #[cfg(test)]
 mod mock;
@@ -12,22 +14,23 @@ mod tests;
 
 pub trait Trait: system::Trait {
 	type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
+	type TokenId: Parameter + Member + MaybeSerialize + Debug + Default + MaybeDisplay + AtLeast32Bit + Copy + CheckedAdd + FullCodec;
 }
 
 decl_storage! {
 	trait Store for Module<T: Trait> as Nft {
 		// Monotonically increasing account ID
-		NextTokenId get(fn next_token_id): u32 = 0;
+		NextTokenId get(fn next_token_id): T::TokenId = T::TokenId::default();
 		// Mapping from holder address to their (enumerable) set of owned tokens
-		TokensForAccount get(fn tokens_for_account): map hasher(blake2_128_concat) T::AccountId => Vec<u32>;
+		TokensForAccount get(fn tokens_for_account): map hasher(blake2_128_concat) T::AccountId => Vec<T::TokenId>;
 		// Mapping from token ID to the address that owns it
-		AccountForToken get(fn account_for_token): map hasher(blake2_128_concat) u32 => T::AccountId;
+		AccountForToken get(fn account_for_token): map hasher(blake2_128_concat) T::TokenId => T::AccountId;
 	}
 }
 
 decl_event!(
-	pub enum Event<T> where AccountId = <T as system::Trait>::AccountId {
-		TokenMinted(u32, AccountId),
+	pub enum Event<T> where AccountId = <T as system::Trait>::AccountId, TokenId = <T as self::Trait>::TokenId {
+		TokenMinted(TokenId, AccountId),
 	}
 );
 
@@ -55,7 +58,12 @@ decl_module! {
 			let token_id = Self::next_token_id();
 			origin_tokens.push(token_id);
 			AccountForToken::<T>::insert(token_id, &who);
-			NextTokenId::put(token_id + 1);
+			let add_result = token_id.checked_add(&T::TokenId::from(1));
+			match add_result {
+				Some(result) => NextTokenId::<T>::put(result),
+				None => Err(Error::<T>::TooManyTokens)?,
+			}
+
 			Self::deposit_event(RawEvent::TokenMinted(token_id, who));
 			Ok(())
 		}
