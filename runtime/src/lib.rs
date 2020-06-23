@@ -253,11 +253,16 @@ impl sudo::Trait for Runtime {
     type Call = Call;
 }
 
+parameter_types! {
+    pub const MaxAssetsPerUser: usize = 256;
+}
+
 /// Implement the nft pallet
 impl nft::Trait for Runtime {
     type Event = Event;
     type AssetAdmin = system::EnsureRoot<AccountId>;
     type AssetInfo = Vec<u8>;
+    type UserAssetLimit = MaxAssetsPerUser;
 }
 
 construct_runtime!(
