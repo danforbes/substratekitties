@@ -32,7 +32,7 @@ use frame_support::{
 };
 use frame_system::{self as system, ensure_signed};
 use sp_runtime::traits::Member;
-use sp_std::{fmt::Debug, vec::Vec};
+use sp_std::fmt::Debug;
 
 #[cfg(test)]
 mod mock;
@@ -44,24 +44,24 @@ pub trait Trait<I = DefaultInstance>: system::Trait {
     type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
     type AssetAdmin: EnsureOrigin<Self::Origin>;
     type AssetInfo: Hashable + Member + Debug + Default + FullCodec;
-    type AssetLimit: Get<u64>;
+    type AssetLimit: Get<u128>;
     type UserAssetLimit: Get<u64>;
 }
+
+pub type AssetId = [u8; 16];
 
 decl_storage! {
     trait Store for Module<T: Trait<I>, I: Instance = DefaultInstance> as NFT {
         // The total number of this type of unique asset that is currently in existence
-        TotalBalance get(fn total_balance): u64 = 0;
-        // The total number of this type of unique asset that has been burned
+        TotalBalance get(fn total_balance): u128 = 0;
+        // The total number of this type of unique asset that has been burned (may overflow)
         TotalBurned get(fn total_burned): u128 = 0;
         // The total number of this type of unique asset owned by an account
         BalanceForAccount get(fn balance_for_account): map hasher(blake2_128_concat) T::AccountId => u64 = 0;
         // Mapping from holder address to their (enumerable) set of owned assets
-        AssetsForAccount get(fn assets_for_account): map hasher(blake2_128_concat) T::AccountId => Vec<Vec<u8>>;
+        AssetsForAccount get(fn assets_for_account): double_map hasher(blake2_128_concat) T::AccountId, hasher(identity) AssetId => T::AssetInfo;
         // Mapping from asset ID to the address that owns it
-        AccountForAsset get(fn account_for_asset): map hasher(identity) Vec<u8> => T::AccountId;
-        // Mapping from asset ID to the info for that asset
-        InfoForAsset get(fn info_for_asset): map hasher(identity) Vec<u8> => T::AssetInfo;
+        AccountForAsset get(fn account_for_asset): map hasher(identity) AssetId => T::AccountId;
     }
 }
 
@@ -70,9 +70,9 @@ decl_event!(
     where
         AccountId = <T as system::Trait>::AccountId,
     {
-        AssetBurned(Vec<u8>),
-        AssetMinted(Vec<u8>, AccountId),
-        AssetTransferred(Vec<u8>, AccountId),
+        AssetBurned(AssetId),
+        AssetMinted(AssetId, AccountId),
+        AssetTransferred(AssetId, AccountId),
     }
 );
 
@@ -110,7 +110,7 @@ decl_module! {
         pub fn mint_asset(origin, owner_account: T::AccountId, asset_info: T::AssetInfo) -> dispatch::DispatchResult {
             T::AssetAdmin::ensure_origin(origin)?;
 
-            let asset_id = asset_info.blake2_128_concat();
+            let asset_id = asset_info.blake2_128();
 
             ensure!(!AccountForAsset::<T, I>::contains_key(&asset_id), Error::<T, I>::AssetExists);
             ensure!(Self::total_balance() <= T::AssetLimit::get(), Error::<T, I>::TooManyAssets);
@@ -118,41 +118,40 @@ decl_module! {
 
             TotalBalance::<I>::mutate(|balance| *balance += 1);
             BalanceForAccount::<T, I>::mutate(&owner_account, |balance| *balance += 1);
-            AssetsForAccount::<T, I>::append(&owner_account, &asset_id);
+            AssetsForAccount::<T, I>::insert(&owner_account, &asset_id, asset_info);
             AccountForAsset::<T, I>::insert(&asset_id, &owner_account);
-            InfoForAsset::<T, I>::insert(&asset_id, asset_info);
 
             Self::deposit_event(RawEvent::AssetMinted(asset_id, owner_account));
             Ok(())
         }
 
         #[weight = 10_000]
-        pub fn burn_asset(origin, asset_id: Vec<u8>) -> dispatch::DispatchResult {
+        pub fn burn_asset(origin, asset_id: AssetId) -> dispatch::DispatchResult {
             let who = ensure_signed(origin)?;
 
             ensure!(who == Self::account_for_asset(&asset_id), Error::<T, I>::NotAssetOwner);
 
             TotalBalance::<I>::mutate(|balance| *balance -= 1);
             TotalBurned::<I>::mutate(|balance| *balance += 1);
-            BalanceForAccount::<T, I>::mutate(who, |balance| *balance -= 1);
-            // AssetsForAccount
+            BalanceForAccount::<T, I>::mutate(&who, |balance| *balance -= 1);
+            AssetsForAccount::<T, I>::remove(&who, &asset_id);
             AccountForAsset::<T, I>::remove(&asset_id);
-            InfoForAsset::<T, I>::remove(&asset_id);
 
             Self::deposit_event(RawEvent::AssetBurned(asset_id));
             Ok(())
         }
 
         #[weight = 10_000]
-        pub fn transfer_asset(origin, dest_account: T::AccountId, asset_id: Vec<u8>) -> dispatch::DispatchResult {
+        pub fn transfer_asset(origin, dest_account: T::AccountId, asset_id: AssetId) -> dispatch::DispatchResult {
             let who = ensure_signed(origin)?;
 
             ensure!(who == Self::account_for_asset(&asset_id), Error::<T, I>::NotAssetOwner);
             ensure!(Self::balance_for_account(&dest_account) <= T::UserAssetLimit::get(), Error::<T, I>::TooManyAssetsForUser);
 
-            BalanceForAccount::<T, I>::mutate(who, |balance| *balance -= 1);
+            BalanceForAccount::<T, I>::mutate(&who, |balance| *balance -= 1);
             BalanceForAccount::<T, I>::mutate(&dest_account, |balance| *balance += 1);
-            // AssetsForAccount
+            let asset_info = AssetsForAccount::<T, I>::take(who, &asset_id);
+            AssetsForAccount::<T, I>::insert(&dest_account, &asset_id, asset_info);
             AccountForAsset::<T, I>::insert(&asset_id, &dest_account);
 
             Self::deposit_event(RawEvent::AssetTransferred(asset_id, dest_account));

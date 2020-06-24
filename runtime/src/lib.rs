@@ -262,7 +262,7 @@ pub struct KittyInfo {
 }
 
 parameter_types! {
-    pub const MaxKitties: u64 = 2^64;
+    pub const MaxKitties: u128 = 2^64;
     pub const MaxKittiesPerUser: u64 = 256;
 }
 
