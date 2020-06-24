@@ -26,7 +26,7 @@
 
 use codec::FullCodec;
 use frame_support::{
-    decl_error, decl_event, decl_module, decl_storage, dispatch,
+    decl_error, decl_event, decl_module, decl_storage, dispatch, ensure,
     traits::{EnsureOrigin, Get},
     Hashable,
 };
@@ -53,9 +53,9 @@ decl_storage! {
         // The total number of this type of unique asset that is currently in existence
         TotalBalance get(fn total_balance): u64 = 0;
         // The total number of this type of unique asset that has been burned
-        TotalBurned get(fn total_burned): u64 = 0;
+        TotalBurned get(fn total_burned): u128 = 0;
         // The total number of this type of unique asset owned by an account
-        BalanceForAccount get(fn balance_for_account): map hasher(blake2_128_concat) T::AccountId => u128 = 0;
+        BalanceForAccount get(fn balance_for_account): map hasher(blake2_128_concat) T::AccountId => u64 = 0;
         // Mapping from holder address to their (enumerable) set of owned assets
         AssetsForAccount get(fn assets_for_account): map hasher(blake2_128_concat) T::AccountId => Vec<Vec<u8>>;
         // Mapping from asset ID to the address that owns it
@@ -70,9 +70,9 @@ decl_event!(
     where
         AccountId = <T as system::Trait>::AccountId,
     {
-        AssetBurned(Vec<u8>, AccountId),
+        AssetBurned(Vec<u8>),
         AssetMinted(Vec<u8>, AccountId),
-        AssetTransferred(Vec<u8>, AccountId, AccountId),
+        AssetTransferred(Vec<u8>, AccountId),
     }
 );
 
@@ -80,8 +80,6 @@ decl_error! {
     pub enum Error for Module<T: Trait<I>, I: Instance> {
         // The asset already exists
         AssetExists,
-        // The asset does not exists
-        AssetDoesNotExists,
         // The user is not the asset owner
         NotAssetOwner,
         // There are too many assets
@@ -113,44 +111,51 @@ decl_module! {
             T::AssetAdmin::ensure_origin(origin)?;
 
             let asset_id = asset_info.blake2_128_concat();
-            if InfoForAsset::<T, I>::contains_key(&asset_id) {
-                Err(Error::<T, I>::AssetExists)?;
-            }
 
-            if AssetsForAccount::<T, I>::decode_len(&owner_account).unwrap_or(0) == T::UserAssetLimit::get() as usize {
-                Err(Error::<T, I>::TooManyAssetsForUser)?;
-            }
+            ensure!(!AccountForAsset::<T, I>::contains_key(&asset_id), Error::<T, I>::AssetExists);
+            ensure!(Self::total_balance() <= T::AssetLimit::get(), Error::<T, I>::TooManyAssets);
+            ensure!(Self::balance_for_account(&owner_account) <= T::UserAssetLimit::get(), Error::<T, I>::TooManyAssetsForUser);
 
-            let total_balance = Self::total_balance();
-            if total_balance == T::AssetLimit::get() {
-                Err(Error::<T, I>::TooManyAssets)?;
-            }
-
-            // let new_balance = total_balance.checked_add(1);
-            // match new_balance {
-            //     Some(balance) => TotalBalance::<T, I>::put(balance),
-            //     None => Err(Error::<T, I>::TooManyAssets),
-            // }
-
+            TotalBalance::<I>::mutate(|balance| *balance += 1);
+            BalanceForAccount::<T, I>::mutate(&owner_account, |balance| *balance += 1);
             AssetsForAccount::<T, I>::append(&owner_account, &asset_id);
             AccountForAsset::<T, I>::insert(&asset_id, &owner_account);
             InfoForAsset::<T, I>::insert(&asset_id, asset_info);
+
             Self::deposit_event(RawEvent::AssetMinted(asset_id, owner_account));
+            Ok(())
+        }
+
+        #[weight = 10_000]
+        pub fn burn_asset(origin, asset_id: Vec<u8>) -> dispatch::DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            ensure!(who == Self::account_for_asset(&asset_id), Error::<T, I>::NotAssetOwner);
+
+            TotalBalance::<I>::mutate(|balance| *balance -= 1);
+            TotalBurned::<I>::mutate(|balance| *balance += 1);
+            BalanceForAccount::<T, I>::mutate(who, |balance| *balance -= 1);
+            // AssetsForAccount
+            AccountForAsset::<T, I>::remove(&asset_id);
+            InfoForAsset::<T, I>::remove(&asset_id);
+
+            Self::deposit_event(RawEvent::AssetBurned(asset_id));
             Ok(())
         }
 
         #[weight = 10_000]
         pub fn transfer_asset(origin, dest_account: T::AccountId, asset_id: Vec<u8>) -> dispatch::DispatchResult {
             let who = ensure_signed(origin)?;
-            if !AccountForAsset::<T, I>::contains_key(&asset_id) {
-                Err(Error::<T, I>::AssetDoesNotExists)?;
-            }
 
-            let asset_owner = Self::account_for_asset(asset_id);
-            if who != asset_owner {
-                Err(Error::<T, I>::NotAssetOwner)?;
-            }
+            ensure!(who == Self::account_for_asset(&asset_id), Error::<T, I>::NotAssetOwner);
+            ensure!(Self::balance_for_account(&dest_account) <= T::UserAssetLimit::get(), Error::<T, I>::TooManyAssetsForUser);
 
+            BalanceForAccount::<T, I>::mutate(who, |balance| *balance -= 1);
+            BalanceForAccount::<T, I>::mutate(&dest_account, |balance| *balance += 1);
+            // AssetsForAccount
+            AccountForAsset::<T, I>::insert(&asset_id, &dest_account);
+
+            Self::deposit_event(RawEvent::AssetTransferred(asset_id, dest_account));
             Ok(())
         }
     }
