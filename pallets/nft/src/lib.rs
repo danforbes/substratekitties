@@ -31,7 +31,7 @@ use frame_support::{
     Hashable,
 };
 use frame_system::{self as system};
-use sp_runtime::traits::{MaybeSerialize, Member};
+use sp_runtime::traits::Member;
 use sp_std::{fmt::Debug, vec::Vec};
 
 #[cfg(test)]
@@ -43,7 +43,7 @@ mod tests;
 pub trait Trait<I = DefaultInstance>: system::Trait {
     type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
     type AssetAdmin: EnsureOrigin<Self::Origin>;
-    type AssetInfo: Hashable + Member + MaybeSerialize + Debug + Default + FullCodec;
+    type AssetInfo: Hashable + Member + Debug + Default + FullCodec;
     type UserAssetLimit: Get<usize>;
 }
 
