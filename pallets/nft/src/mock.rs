@@ -52,12 +52,14 @@ impl system::Trait for Test {
 	type OnKilledAccount = ();
 }
 parameter_types! {
-    pub const MaxAssetsPerUser: usize = 256;
+    pub const MaxAssets: u64 = 2^64;
+    pub const MaxAssetsPerUser: u64 = 256;
 }
 impl Trait for Test {
     type Event = ();
     type AssetAdmin = frame_system::EnsureRoot<Self::AccountId>;
     type AssetInfo = Vec<u8>;
+    type AssetLimit = MaxAssets;
     type UserAssetLimit = MaxAssetsPerUser;
 }
 pub type NFT = Module<Test>;

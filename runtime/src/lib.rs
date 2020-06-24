@@ -262,13 +262,15 @@ pub struct KittyInfo {
 }
 
 parameter_types! {
-    pub const MaxKittiesPerUser: usize = 256;
+    pub const MaxKitties: u64 = 2^64;
+    pub const MaxKittiesPerUser: u64 = 256;
 }
 
 impl nft::Trait for Runtime {
     type Event = Event;
     type AssetAdmin = system::EnsureRoot<AccountId>;
     type AssetInfo = KittyInfo;
+    type AssetLimit = MaxKitties;
     type UserAssetLimit = MaxKittiesPerUser;
 }
 

@@ -30,7 +30,7 @@ use frame_support::{
     traits::{EnsureOrigin, Get},
     Hashable,
 };
-use frame_system::{self as system};
+use frame_system::{self as system, ensure_signed};
 use sp_runtime::traits::Member;
 use sp_std::{fmt::Debug, vec::Vec};
 
@@ -44,11 +44,18 @@ pub trait Trait<I = DefaultInstance>: system::Trait {
     type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
     type AssetAdmin: EnsureOrigin<Self::Origin>;
     type AssetInfo: Hashable + Member + Debug + Default + FullCodec;
-    type UserAssetLimit: Get<usize>;
+    type AssetLimit: Get<u64>;
+    type UserAssetLimit: Get<u64>;
 }
 
 decl_storage! {
     trait Store for Module<T: Trait<I>, I: Instance = DefaultInstance> as NFT {
+        // The total number of this type of unique asset that is currently in existence
+        TotalBalance get(fn total_balance): u64 = 0;
+        // The total number of this type of unique asset that has been burned
+        TotalBurned get(fn total_burned): u64 = 0;
+        // The total number of this type of unique asset owned by an account
+        BalanceForAccount get(fn balance_for_account): map hasher(blake2_128_concat) T::AccountId => u128 = 0;
         // Mapping from holder address to their (enumerable) set of owned assets
         AssetsForAccount get(fn assets_for_account): map hasher(blake2_128_concat) T::AccountId => Vec<Vec<u8>>;
         // Mapping from asset ID to the address that owns it
@@ -63,7 +70,9 @@ decl_event!(
     where
         AccountId = <T as system::Trait>::AccountId,
     {
+        AssetBurned(Vec<u8>, AccountId),
         AssetMinted(Vec<u8>, AccountId),
+        AssetTransferred(Vec<u8>, AccountId, AccountId),
     }
 );
 
@@ -71,6 +80,12 @@ decl_error! {
     pub enum Error for Module<T: Trait<I>, I: Instance> {
         // The asset already exists
         AssetExists,
+        // The asset does not exists
+        AssetDoesNotExists,
+        // The user is not the asset owner
+        NotAssetOwner,
+        // There are too many assets
+        TooManyAssets,
         // The user has too many assets
         TooManyAssetsForUser,
     }
@@ -102,14 +117,40 @@ decl_module! {
                 Err(Error::<T, I>::AssetExists)?;
             }
 
-            if AssetsForAccount::<T, I>::decode_len(&owner_account).unwrap_or(0) == T::UserAssetLimit::get() {
+            if AssetsForAccount::<T, I>::decode_len(&owner_account).unwrap_or(0) == T::UserAssetLimit::get() as usize {
                 Err(Error::<T, I>::TooManyAssetsForUser)?;
             }
+
+            let total_balance = Self::total_balance();
+            if total_balance == T::AssetLimit::get() {
+                Err(Error::<T, I>::TooManyAssets)?;
+            }
+
+            // let new_balance = total_balance.checked_add(1);
+            // match new_balance {
+            //     Some(balance) => TotalBalance::<T, I>::put(balance),
+            //     None => Err(Error::<T, I>::TooManyAssets),
+            // }
 
             AssetsForAccount::<T, I>::append(&owner_account, &asset_id);
             AccountForAsset::<T, I>::insert(&asset_id, &owner_account);
             InfoForAsset::<T, I>::insert(&asset_id, asset_info);
             Self::deposit_event(RawEvent::AssetMinted(asset_id, owner_account));
+            Ok(())
+        }
+
+        #[weight = 10_000]
+        pub fn transfer_asset(origin, dest_account: T::AccountId, asset_id: Vec<u8>) -> dispatch::DispatchResult {
+            let who = ensure_signed(origin)?;
+            if !AccountForAsset::<T, I>::contains_key(&asset_id) {
+                Err(Error::<T, I>::AssetDoesNotExists)?;
+            }
+
+            let asset_owner = Self::account_for_asset(asset_id);
+            if who != asset_owner {
+                Err(Error::<T, I>::NotAssetOwner)?;
+            }
+
             Ok(())
         }
     }
