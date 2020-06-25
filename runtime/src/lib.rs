@@ -267,11 +267,11 @@ parameter_types! {
 }
 
 impl nft::Trait for Runtime {
-    type Event = Event;
     type AssetAdmin = system::EnsureRoot<AccountId>;
     type AssetInfo = KittyInfo;
     type AssetLimit = MaxKitties;
     type UserAssetLimit = MaxKittiesPerUser;
+    type Event = Event;
 }
 
 construct_runtime!(
