@@ -52,8 +52,8 @@ impl system::Trait for Test {
 	type OnKilledAccount = ();
 }
 parameter_types! {
-    pub const MaxAssets: u128 = 2^64;
-    pub const MaxAssetsPerUser: u64 = 256;
+    pub const MaxAssets: u128 = 5;
+    pub const MaxAssetsPerUser: u64 = 2;
 }
 impl Trait for Test {
     type Event = ();

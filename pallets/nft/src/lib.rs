@@ -131,8 +131,8 @@ decl_module! {
             let asset_id = asset_info.blake2_128();
 
             ensure!(!AccountForAsset::<T, I>::contains_key(&asset_id), Error::<T, I>::AssetExists);
-            ensure!(Self::balance() <= T::AssetLimit::get(), Error::<T, I>::TooManyAssets);
-            ensure!(Self::balance_for_account(&owner_account) <= T::UserAssetLimit::get(), Error::<T, I>::TooManyAssetsForAccount);
+            ensure!(Self::balance_for_account(&owner_account) < T::UserAssetLimit::get(), Error::<T, I>::TooManyAssetsForAccount);
+            ensure!(Self::balance() < T::AssetLimit::get(), Error::<T, I>::TooManyAssets);
 
             Balance::<I>::mutate(|balance| *balance += 1);
             BalanceForAccount::<T, I>::mutate(&owner_account, |balance| *balance += 1);
@@ -178,7 +178,7 @@ decl_module! {
             let who = ensure_signed(origin)?;
 
             ensure!(who == Self::account_for_asset(&asset_id), Error::<T, I>::NotAssetOwner);
-            ensure!(Self::balance_for_account(&dest_account) <= T::UserAssetLimit::get(), Error::<T, I>::TooManyAssetsForAccount);
+            ensure!(Self::balance_for_account(&dest_account) < T::UserAssetLimit::get(), Error::<T, I>::TooManyAssetsForAccount);
 
             BalanceForAccount::<T, I>::mutate(&who, |balance| *balance -= 1);
             BalanceForAccount::<T, I>::mutate(&dest_account, |balance| *balance += 1);
