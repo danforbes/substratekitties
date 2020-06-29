@@ -26,30 +26,30 @@ parameter_types! {
     pub const AvailableBlockRatio: Perbill = Perbill::from_percent(75);
 }
 impl system::Trait for Test {
-	type BaseCallFilter = ();
-	type Origin = Origin;
-	type Call = ();
-	type Index = u64;
-	type BlockNumber = u64;
-	type Hash = H256;
-	type Hashing = BlakeTwo256;
-	type AccountId = u64;
-	type Lookup = IdentityLookup<Self::AccountId>;
-	type Header = Header;
-	type Event = ();
-	type BlockHashCount = BlockHashCount;
-	type MaximumBlockWeight = MaximumBlockWeight;
-	type DbWeight = ();
-	type BlockExecutionWeight = ();
-	type ExtrinsicBaseWeight = ();
-	type MaximumExtrinsicWeight = MaximumBlockWeight;
-	type MaximumBlockLength = MaximumBlockLength;
-	type AvailableBlockRatio = AvailableBlockRatio;
-	type Version = ();
-	type ModuleToIndex = ();
-	type AccountData = ();
-	type OnNewAccount = ();
-	type OnKilledAccount = ();
+    type BaseCallFilter = ();
+    type Origin = Origin;
+    type Call = ();
+    type Index = u64;
+    type BlockNumber = u64;
+    type Hash = H256;
+    type Hashing = BlakeTwo256;
+    type AccountId = u64;
+    type Lookup = IdentityLookup<Self::AccountId>;
+    type Header = Header;
+    type Event = ();
+    type BlockHashCount = BlockHashCount;
+    type MaximumBlockWeight = MaximumBlockWeight;
+    type DbWeight = ();
+    type BlockExecutionWeight = ();
+    type ExtrinsicBaseWeight = ();
+    type MaximumExtrinsicWeight = MaximumBlockWeight;
+    type MaximumBlockLength = MaximumBlockLength;
+    type AvailableBlockRatio = AvailableBlockRatio;
+    type Version = ();
+    type ModuleToIndex = ();
+    type AccountData = ();
+    type OnNewAccount = ();
+    type OnKilledAccount = ();
 }
 parameter_types! {
     pub const MaxAssets: u128 = 5;

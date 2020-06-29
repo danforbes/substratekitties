@@ -15,7 +15,7 @@ fn mint() {
             0
         );
 
-        assert_ok!(NFT::mint(Origin::ROOT, 1, Vec::<u8>::default()));
+        assert_ok!(NFT::mint(Origin::root(), 1, Vec::<u8>::default()));
 
         assert_eq!(NFT::total(), 1);
         assert_eq!(NFT::burned(), 0);
@@ -44,10 +44,10 @@ fn mint_err_non_admin() {
 #[test]
 fn mint_err_dupe() {
     new_test_ext().execute_with(|| {
-        assert_ok!(NFT::mint(Origin::ROOT, 1, Vec::<u8>::default()));
+        assert_ok!(NFT::mint(Origin::root(), 1, Vec::<u8>::default()));
 
         assert_err!(
-            NFT::mint(Origin::ROOT, 2, Vec::<u8>::default()),
+            NFT::mint(Origin::root(), 2, Vec::<u8>::default()),
             Error::<Test, DefaultInstance>::AssetExists
         );
     });
@@ -56,11 +56,11 @@ fn mint_err_dupe() {
 #[test]
 fn mint_err_max_user() {
     new_test_ext().execute_with(|| {
-        assert_ok!(NFT::mint(Origin::ROOT, 1, vec![]));
-        assert_ok!(NFT::mint(Origin::ROOT, 1, vec![0]));
+        assert_ok!(NFT::mint(Origin::root(), 1, vec![]));
+        assert_ok!(NFT::mint(Origin::root(), 1, vec![0]));
 
         assert_err!(
-            NFT::mint(Origin::ROOT, 1, vec![1]),
+            NFT::mint(Origin::root(), 1, vec![1]),
             Error::<Test, DefaultInstance>::TooManyAssetsForAccount
         );
     });
@@ -69,14 +69,14 @@ fn mint_err_max_user() {
 #[test]
 fn mint_err_max() {
     new_test_ext().execute_with(|| {
-        assert_ok!(NFT::mint(Origin::ROOT, 1, vec![]));
-        assert_ok!(NFT::mint(Origin::ROOT, 2, vec![0]));
-        assert_ok!(NFT::mint(Origin::ROOT, 3, vec![1]));
-        assert_ok!(NFT::mint(Origin::ROOT, 4, vec![2]));
-        assert_ok!(NFT::mint(Origin::ROOT, 5, vec![3]));
+        assert_ok!(NFT::mint(Origin::root(), 1, vec![]));
+        assert_ok!(NFT::mint(Origin::root(), 2, vec![0]));
+        assert_ok!(NFT::mint(Origin::root(), 3, vec![1]));
+        assert_ok!(NFT::mint(Origin::root(), 4, vec![2]));
+        assert_ok!(NFT::mint(Origin::root(), 5, vec![3]));
 
         assert_err!(
-            NFT::mint(Origin::ROOT, 6, vec![4]),
+            NFT::mint(Origin::root(), 6, vec![4]),
             Error::<Test, DefaultInstance>::TooManyAssets
         );
     });
@@ -85,7 +85,7 @@ fn mint_err_max() {
 #[test]
 fn burn() {
     new_test_ext().execute_with(|| {
-        assert_ok!(NFT::mint(Origin::ROOT, 1, Vec::<u8>::default()));
+        assert_ok!(NFT::mint(Origin::root(), 1, Vec::<u8>::default()));
         assert_ok!(NFT::burn(
             Origin::signed(1),
             Vec::<u8>::default().blake2_256().into()
@@ -108,7 +108,7 @@ fn burn() {
 #[test]
 fn burn_err_not_owner() {
     new_test_ext().execute_with(|| {
-        assert_ok!(NFT::mint(Origin::ROOT, 1, Vec::<u8>::default()));
+        assert_ok!(NFT::mint(Origin::root(), 1, Vec::<u8>::default()));
 
         assert_err!(
             NFT::burn(Origin::signed(2), Vec::<u8>::default().blake2_256().into()),
@@ -130,7 +130,7 @@ fn burn_err_not_exist() {
 #[test]
 fn transfer() {
     new_test_ext().execute_with(|| {
-        assert_ok!(NFT::mint(Origin::ROOT, 1, Vec::<u8>::default()));
+        assert_ok!(NFT::mint(Origin::root(), 1, Vec::<u8>::default()));
         assert_ok!(NFT::transfer(
             Origin::signed(1),
             2,
@@ -159,7 +159,7 @@ fn transfer() {
 #[test]
 fn transfer_err_not_owner() {
     new_test_ext().execute_with(|| {
-        assert_ok!(NFT::mint(Origin::ROOT, 1, Vec::<u8>::default()));
+        assert_ok!(NFT::mint(Origin::root(), 1, Vec::<u8>::default()));
 
         assert_err!(
             NFT::transfer(
@@ -189,9 +189,9 @@ fn transfer_err_not_exist() {
 #[test]
 fn transfer_err_max_user() {
     new_test_ext().execute_with(|| {
-        assert_ok!(NFT::mint(Origin::ROOT, 1, vec![0]));
-        assert_ok!(NFT::mint(Origin::ROOT, 1, vec![1]));
-        assert_ok!(NFT::mint(Origin::ROOT, 2, Vec::<u8>::default()));
+        assert_ok!(NFT::mint(Origin::root(), 1, vec![0]));
+        assert_ok!(NFT::mint(Origin::root(), 1, vec![1]));
+        assert_ok!(NFT::mint(Origin::root(), 2, Vec::<u8>::default()));
         assert_eq!(
             NFT::account_for_asset::<H256>(Vec::<u8>::default().blake2_256().into()),
             2

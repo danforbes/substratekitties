@@ -1,32 +1,3 @@
-[features]
-default = ['std']
-std = [
-    'aura/std',
-    'balances/std',
-    'codec/std',
-    'frame-executive/std',
-    'frame-support/std',
-    'grandpa/std',
-    'randomness-collective-flip/std',
-    'serde',
-    'sp-api/std',
-    'sp-block-builder/std',
-    'sp-consensus-aura/std',
-    'sp-core/std',
-    'sp-inherents/std',
-    'sp-io/std',
-    'sp-offchain/std',
-    'sp-runtime/std',
-    'sp-session/std',
-    'sp-std/std',
-    'sp-transaction-pool/std',
-    'sp-version/std',
-    'sudo/std',
-    'system/std',
-    'timestamp/std',
-    'transaction-payment/std',
-    'template/std',
-]
 [dependencies.aura]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
