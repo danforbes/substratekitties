@@ -41,6 +41,9 @@ use frame_system::{self as system, ensure_signed};
 use sp_runtime::traits::{Hash, Member};
 use sp_std::fmt::Debug;
 
+mod nft;
+use crate::nft::UniqueAsset;
+
 #[cfg(test)]
 mod mock;
 
@@ -96,6 +99,8 @@ decl_error! {
     pub enum Error for Module<T: Trait<I>, I: Instance> {
         // Thrown when there is an attempt to mint a duplicate asset.
         AssetExists,
+        // Thrown when there is an attempt to burn or transfer a nonexistent asset.
+        NonexistentAsset,
         // Thrown when someone who is not the owner of an asset attempts to transfer or burn it.
         NotAssetOwner,
         // Thrown when the asset admin attempts to mint an asset and the maximum number of this
@@ -129,16 +134,7 @@ decl_module! {
         pub fn mint(origin, owner_account: T::AccountId, asset_info: T::AssetInfo) -> dispatch::DispatchResult {
             T::AssetAdmin::ensure_origin(origin)?;
 
-            let asset_id = T::Hashing::hash_of(&asset_info);
-
-            ensure!(!AccountForAsset::<T, I>::contains_key(&asset_id), Error::<T, I>::AssetExists);
-            ensure!(Self::total_for_account(&owner_account) < T::UserAssetLimit::get(), Error::<T, I>::TooManyAssetsForAccount);
-            ensure!(Self::total() < T::AssetLimit::get(), Error::<T, I>::TooManyAssets);
-
-            Total::<I>::mutate(|total| *total += 1);
-            TotalForAccount::<T, I>::mutate(&owner_account, |total| *total += 1);
-            AssetsForAccount::<T, I>::insert(&owner_account, &asset_id, asset_info);
-            AccountForAsset::<T, I>::insert(&asset_id, &owner_account);
+            let asset_id = Self::mint_asset(&owner_account, asset_info)?;
 
             Self::deposit_event(RawEvent::Minted(asset_id, owner_account));
             Ok(())
@@ -153,14 +149,9 @@ decl_module! {
         #[weight = 10_000]
         pub fn burn(origin, asset_id: AssetId<T>) -> dispatch::DispatchResult {
             let who = ensure_signed(origin)?;
-
             ensure!(who == Self::account_for_asset(&asset_id), Error::<T, I>::NotAssetOwner);
 
-            Total::<I>::mutate(|total| *total -= 1);
-            Burned::<I>::mutate(|total| *total += 1);
-            TotalForAccount::<T, I>::mutate(&who, |total| *total -= 1);
-            AssetsForAccount::<T, I>::remove(&who, &asset_id);
-            AccountForAsset::<T, I>::remove(&asset_id);
+            Self::burn_asset(asset_id)?;
 
             Self::deposit_event(RawEvent::Burned(asset_id));
             Ok(())
@@ -179,18 +170,135 @@ decl_module! {
         #[weight = 10_000]
         pub fn transfer(origin, dest_account: T::AccountId, asset_id: AssetId<T>) -> dispatch::DispatchResult {
             let who = ensure_signed(origin)?;
-
             ensure!(who == Self::account_for_asset(&asset_id), Error::<T, I>::NotAssetOwner);
-            ensure!(Self::total_for_account(&dest_account) < T::UserAssetLimit::get(), Error::<T, I>::TooManyAssetsForAccount);
 
-            TotalForAccount::<T, I>::mutate(&who, |total| *total -= 1);
-            TotalForAccount::<T, I>::mutate(&dest_account, |total| *total += 1);
-            let asset_info = AssetsForAccount::<T, I>::take(who, &asset_id);
-            AssetsForAccount::<T, I>::insert(&dest_account, &asset_id, asset_info);
-            AccountForAsset::<T, I>::insert(&asset_id, &dest_account);
+            Self::transfer_asset(&dest_account, asset_id)?;
 
             Self::deposit_event(RawEvent::Transferred(asset_id, dest_account));
             Ok(())
         }
+    }
+}
+
+impl<T: Trait<I>, I: Instance> Module<T, I> {
+    pub fn total_assets() -> u128 {
+        Self::total()
+    }
+
+    pub fn total_burned() -> u128 {
+        Self::burned()
+    }
+
+    pub fn total_assets_for_account(account: T::AccountId) -> u64 {
+        Self::total_for_account(account)
+    }
+
+    pub fn owner_of(asset_id: AssetId<T>) -> T::AccountId {
+        Self::account_for_asset(asset_id)
+    }
+
+    pub fn mint_asset(
+        owner_account: &T::AccountId,
+        asset_info: T::AssetInfo,
+    ) -> dispatch::result::Result<AssetId<T>, dispatch::DispatchError> {
+        let asset_id = T::Hashing::hash_of(&asset_info);
+
+        ensure!(
+            !AccountForAsset::<T, I>::contains_key(&asset_id),
+            Error::<T, I>::AssetExists
+        );
+
+        ensure!(
+            Self::total_for_account(owner_account) < T::UserAssetLimit::get(),
+            Error::<T, I>::TooManyAssetsForAccount
+        );
+
+        ensure!(
+            Self::total() < T::AssetLimit::get(),
+            Error::<T, I>::TooManyAssets
+        );
+
+        Total::<I>::mutate(|total| *total += 1);
+        TotalForAccount::<T, I>::mutate(owner_account, |total| *total += 1);
+        AssetsForAccount::<T, I>::insert(owner_account, &asset_id, asset_info);
+        AccountForAsset::<T, I>::insert(asset_id, &owner_account);
+
+        Ok(asset_id)
+    }
+
+    pub fn burn_asset(asset_id: AssetId<T>) -> dispatch::DispatchResult {
+        let owner = Self::owner_of(asset_id);
+        ensure!(
+            owner != T::AccountId::default(),
+            Error::<T, I>::NonexistentAsset
+        );
+
+        Total::<I>::mutate(|total| *total -= 1);
+        Burned::<I>::mutate(|total| *total += 1);
+        TotalForAccount::<T, I>::mutate(&owner, |total| *total -= 1);
+        AssetsForAccount::<T, I>::remove(owner, &asset_id);
+        AccountForAsset::<T, I>::remove(&asset_id);
+
+        Ok(())
+    }
+
+    pub fn transfer_asset(
+        dest_account: &T::AccountId,
+        asset_id: AssetId<T>,
+    ) -> dispatch::DispatchResult {
+        let owner = Self::owner_of(asset_id);
+        ensure!(
+            owner != T::AccountId::default(),
+            Error::<T, I>::NonexistentAsset
+        );
+
+        ensure!(
+            Self::total_for_account(dest_account) < T::UserAssetLimit::get(),
+            Error::<T, I>::TooManyAssetsForAccount
+        );
+
+        TotalForAccount::<T, I>::mutate(&owner, |total| *total -= 1);
+        TotalForAccount::<T, I>::mutate(dest_account, |total| *total += 1);
+        let asset_info = AssetsForAccount::<T, I>::take(owner, &asset_id);
+        AssetsForAccount::<T, I>::insert(dest_account, &asset_id, asset_info);
+        AccountForAsset::<T, I>::insert(&asset_id, &dest_account);
+
+        Ok(())
+    }
+}
+
+impl<T: Trait<I>, I: Instance> UniqueAsset<<T as system::Trait>::AccountId> for Module<T, I> {
+    type AssetInfo = T::AssetInfo;
+    type AssetId = AssetId<T>;
+
+    fn total() -> u128 {
+        Self::total_assets()
+    }
+
+    fn burned() -> u128 {
+        Self::total_burned()
+    }
+
+    fn total_for_account(account: T::AccountId) -> u64 {
+        Self::total_assets_for_account(account)
+    }
+
+    fn owner_of(asset_id: Self::AssetId) -> T::AccountId {
+        Self::account_for_asset(asset_id)
+    }
+
+    fn mint(
+        owner_account: T::AccountId,
+        asset_info: Self::AssetInfo,
+    ) -> dispatch::result::Result<AssetId<T>, dispatch::DispatchError> {
+        Self::mint_asset(&owner_account, asset_info)
+    }
+
+    fn burn(asset_id: Self::AssetId) -> dispatch::DispatchResult {
+        Self::burn_asset(asset_id)
+    }
+
+    fn transfer(dest_account: T::AccountId, asset_id: Self::AssetId) -> dispatch::DispatchResult {
+        Self::transfer_asset(&dest_account, asset_id)
     }
 }
