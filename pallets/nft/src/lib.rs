@@ -1,4 +1,4 @@
-//! # Unique Assets
+//! # Unique Assets Implementation
 //!
 //! This pallet exposes capabilities for managing unique assets, also known as
 //! non-fungible tokens (NFTs).
@@ -17,17 +17,19 @@
 //! own. Assets are uniquely identified by the hash of the info that defines
 //! them, as calculated by the runtime system's hashing algorithm.
 //!
+//! This pallet implements the `UniqueAssets` trait.
+//!
 //! ### Dispatchable Functions
 //!
 //! * [`mint`](./enum.Call.html#variant.mint) - Use the provided asset info to
 //!   create a new unique asset for the specified user. May only be called by
 //!   the asset admin.
 //!
-//! * [`transfer`](./enum.Call.html#variant.transfer) - Transfer ownership of
-//!   an asset to another account. May only be called by current asset owner.
-//!
 //! * [`burn`](./enum.Call.html#variant.burn) - Destroy an asset. May only be
 //!   called by asset owner.
+//!
+//! * [`transfer`](./enum.Call.html#variant.transfer) - Transfer ownership of
+//!   an asset to another account. May only be called by current asset owner.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -42,7 +44,7 @@ use sp_runtime::traits::{Hash, Member};
 use sp_std::fmt::Debug;
 
 mod nft;
-use crate::nft::UniqueAsset;
+use crate::nft::UniqueAssets;
 
 #[cfg(test)]
 mod mock;
@@ -181,22 +183,27 @@ decl_module! {
 }
 
 impl<T: Trait<I>, I: Instance> Module<T, I> {
+    // The total number of this type of asset that exists (minted - burned).
     pub fn total_assets() -> u128 {
         Self::total()
     }
 
+    // The total number of this type of asset that has been burned (may overflow).
     pub fn total_burned() -> u128 {
         Self::burned()
     }
 
+    // The total number of this type of asset owned by an account.
     pub fn total_assets_for_account(account: T::AccountId) -> u64 {
         Self::total_for_account(account)
     }
 
+    // The ID of the account that owns an asset.
     pub fn owner_of(asset_id: AssetId<T>) -> T::AccountId {
         Self::account_for_asset(asset_id)
     }
 
+    // Use the provided asset info to create a new unique asset for the specified user.
     pub fn mint_asset(
         owner_account: &T::AccountId,
         asset_info: T::AssetInfo,
@@ -226,6 +233,7 @@ impl<T: Trait<I>, I: Instance> Module<T, I> {
         Ok(asset_id)
     }
 
+    // Destroy an asset.
     pub fn burn_asset(asset_id: AssetId<T>) -> dispatch::DispatchResult {
         let owner = Self::owner_of(asset_id);
         ensure!(
@@ -242,6 +250,7 @@ impl<T: Trait<I>, I: Instance> Module<T, I> {
         Ok(())
     }
 
+    // Transfer ownership of an asset to another account.
     pub fn transfer_asset(
         dest_account: &T::AccountId,
         asset_id: AssetId<T>,
@@ -267,7 +276,7 @@ impl<T: Trait<I>, I: Instance> Module<T, I> {
     }
 }
 
-impl<T: Trait<I>, I: Instance> UniqueAsset<<T as system::Trait>::AccountId> for Module<T, I> {
+impl<T: Trait<I>, I: Instance> UniqueAssets<<T as system::Trait>::AccountId> for Module<T, I> {
     type AssetInfo = T::AssetInfo;
     type AssetId = AssetId<T>;
 
