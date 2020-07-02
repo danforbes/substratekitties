@@ -62,7 +62,9 @@ impl Trait for Test {
     type AssetLimit = MaxAssets;
     type UserAssetLimit = MaxAssetsPerUser;
 }
-pub type NFT = Module<Test>;
+
+// system under test
+pub type SUT = Module<Test>;
 
 // This function basically just builds a genesis storage key/value store according to
 // our desired mockup.

@@ -33,18 +33,25 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use codec::FullCodec;
+use codec::{Decode, Encode, FullCodec};
 use frame_support::{
     decl_error, decl_event, decl_module, decl_storage, dispatch, ensure,
     traits::{EnsureOrigin, Get},
     Hashable,
 };
 use frame_system::{self as system, ensure_signed};
-use sp_runtime::traits::{Hash, Member};
-use sp_std::fmt::Debug;
+use sp_runtime::{
+    traits::{Hash, Member},
+    RuntimeDebug,
+};
+use sp_std::{
+    cmp::{Eq, Ordering},
+    fmt::Debug,
+    vec::Vec,
+};
 
 mod nft;
-use crate::nft::UniqueAssets;
+use crate::nft::{UniqueAssets, NFT};
 
 #[cfg(test)]
 mod mock;
@@ -67,6 +74,36 @@ pub trait Trait<I = DefaultInstance>: system::Trait {
 // The runtime system's hashing algorithm is used to uniquely identify assets.
 pub type AssetId<T> = <T as frame_system::Trait>::Hash;
 
+#[derive(Encode, Decode, Clone, Eq, RuntimeDebug)]
+pub struct IdentifiedAsset<Hash, AssetInfo> {
+    pub id: Hash,
+    pub asset: AssetInfo,
+}
+
+impl<AssetId: Ord, AssetInfo: Eq> Ord for IdentifiedAsset<AssetId, AssetInfo> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.id.cmp(&other.id)
+    }
+}
+
+impl<AssetId: Ord, AssetInfo> PartialOrd for IdentifiedAsset<AssetId, AssetInfo> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.id.cmp(&other.id))
+    }
+}
+
+impl<AssetId: Eq, AssetInfo> PartialEq for IdentifiedAsset<AssetId, AssetInfo> {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
+pub type IdentifiedAssetFor<T, I> = IdentifiedAsset<AssetId<T>, <T as Trait<I>>::AssetInfo>;
+impl<AssetId, AssetInfo> NFT for IdentifiedAsset<AssetId, AssetInfo> {
+    type Id = AssetId;
+    type Info = AssetInfo;
+}
+
 decl_storage! {
     trait Store for Module<T: Trait<I>, I: Instance = DefaultInstance> as NFT {
         // The total number of this type of asset that exists (minted - burned).
@@ -76,7 +113,7 @@ decl_storage! {
         // The total number of this type of asset owned by an account.
         TotalForAccount get(fn total_for_account): map hasher(blake2_128_concat) T::AccountId => u64 = 0;
         // A mapping from an asset owner & ID to the info for that asset.
-        AssetsForAccount get(fn assets_for_account): double_map hasher(blake2_128_concat) T::AccountId, hasher(identity) AssetId<T> => T::AssetInfo;
+        AssetsForAccount get(fn assets_for_account): map hasher(blake2_128_concat) T::AccountId => Vec<IdentifiedAssetFor<T, I>>;
         // A mapping from an asset ID to the account that owns it.
         AccountForAsset get(fn account_for_asset): map hasher(identity) AssetId<T> => T::AccountId;
     }
@@ -198,6 +235,11 @@ impl<T: Trait<I>, I: Instance> Module<T, I> {
         Self::total_for_account(account)
     }
 
+    // All of this type of asset owned by an account.
+    pub fn all_assets_for_account(account: T::AccountId) -> Vec<IdentifiedAssetFor<T, I>> {
+        Self::assets_for_account(account)
+    }
+
     // The ID of the account that owns an asset.
     pub fn owner_of(asset_id: AssetId<T>) -> T::AccountId {
         Self::account_for_asset(asset_id)
@@ -225,9 +267,19 @@ impl<T: Trait<I>, I: Instance> Module<T, I> {
             Error::<T, I>::TooManyAssets
         );
 
+        let new_asset = IdentifiedAsset::<AssetId<T>, <T as Trait<I>>::AssetInfo> {
+            id: asset_id,
+            asset: asset_info,
+        };
+
         Total::<I>::mutate(|total| *total += 1);
         TotalForAccount::<T, I>::mutate(owner_account, |total| *total += 1);
-        AssetsForAccount::<T, I>::insert(owner_account, &asset_id, asset_info);
+        AssetsForAccount::<T, I>::mutate(owner_account, |assets| {
+            match assets.binary_search(&new_asset) {
+                Ok(_pos) => {} // should never happen
+                Err(pos) => assets.insert(pos, new_asset),
+            }
+        });
         AccountForAsset::<T, I>::insert(asset_id, &owner_account);
 
         Ok(asset_id)
@@ -241,10 +293,20 @@ impl<T: Trait<I>, I: Instance> Module<T, I> {
             Error::<T, I>::NonexistentAsset
         );
 
+        let burn_asset = IdentifiedAsset::<AssetId<T>, <T as Trait<I>>::AssetInfo> {
+            id: asset_id,
+            asset: <T as Trait<I>>::AssetInfo::default(),
+        };
+
         Total::<I>::mutate(|total| *total -= 1);
         Burned::<I>::mutate(|total| *total += 1);
         TotalForAccount::<T, I>::mutate(&owner, |total| *total -= 1);
-        AssetsForAccount::<T, I>::remove(owner, &asset_id);
+        AssetsForAccount::<T, I>::mutate(owner, |assets| {
+            match assets.binary_search(&burn_asset) {
+                Ok(pos) => assets.remove(pos),
+                Err(_pos) => burn_asset, // should never happen
+            }
+        });
         AccountForAsset::<T, I>::remove(&asset_id);
 
         Ok(())
@@ -266,20 +328,37 @@ impl<T: Trait<I>, I: Instance> Module<T, I> {
             Error::<T, I>::TooManyAssetsForAccount
         );
 
+        let xfer_asset = IdentifiedAsset::<AssetId<T>, <T as Trait<I>>::AssetInfo> {
+            id: asset_id,
+            asset: <T as Trait<I>>::AssetInfo::default(),
+        };
+
         TotalForAccount::<T, I>::mutate(&owner, |total| *total -= 1);
         TotalForAccount::<T, I>::mutate(dest_account, |total| *total += 1);
-        let asset_info = AssetsForAccount::<T, I>::take(owner, &asset_id);
-        AssetsForAccount::<T, I>::insert(dest_account, &asset_id, asset_info);
+        let asset = AssetsForAccount::<T, I>::mutate(owner, |assets| {
+            match assets.binary_search(&xfer_asset) {
+                Ok(pos) => assets.remove(pos),
+                Err(_pos) => xfer_asset, // should never happen
+            }
+        });
+        AssetsForAccount::<T, I>::mutate(dest_account, |assets| {
+            match assets.binary_search(&asset) {
+                Ok(_pos) => {} // should never happen
+                Err(pos) => assets.insert(pos, asset),
+            }
+        });
         AccountForAsset::<T, I>::insert(&asset_id, &dest_account);
 
         Ok(())
     }
 }
 
-impl<T: Trait<I>, I: Instance> UniqueAssets<<T as system::Trait>::AccountId> for Module<T, I> {
-    type AssetInfo = T::AssetInfo;
-    type AssetId = AssetId<T>;
-
+impl<T: Trait<I>, I: Instance>
+    UniqueAssets<
+        <T as system::Trait>::AccountId,
+        IdentifiedAsset<AssetId<T>, <T as Trait<I>>::AssetInfo>,
+    > for Module<T, I>
+{
     fn total() -> u128 {
         Self::total_assets()
     }
@@ -292,22 +371,28 @@ impl<T: Trait<I>, I: Instance> UniqueAssets<<T as system::Trait>::AccountId> for
         Self::total_assets_for_account(account)
     }
 
-    fn owner_of(asset_id: Self::AssetId) -> T::AccountId {
+    fn assets_for_account(
+        account: T::AccountId,
+    ) -> Vec<IdentifiedAsset<AssetId<T>, <T as Trait<I>>::AssetInfo>> {
+        Self::all_assets_for_account(account)
+    }
+
+    fn owner_of(asset_id: AssetId<T>) -> T::AccountId {
         Self::account_for_asset(asset_id)
     }
 
     fn mint(
         owner_account: T::AccountId,
-        asset_info: Self::AssetInfo,
+        asset_info: <T as Trait<I>>::AssetInfo,
     ) -> dispatch::result::Result<AssetId<T>, dispatch::DispatchError> {
         Self::mint_asset(&owner_account, asset_info)
     }
 
-    fn burn(asset_id: Self::AssetId) -> dispatch::DispatchResult {
+    fn burn(asset_id: AssetId<T>) -> dispatch::DispatchResult {
         Self::burn_asset(asset_id)
     }
 
-    fn transfer(dest_account: T::AccountId, asset_id: Self::AssetId) -> dispatch::DispatchResult {
+    fn transfer(dest_account: T::AccountId, asset_id: AssetId<T>) -> dispatch::DispatchResult {
         Self::transfer_asset(&dest_account, asset_id)
     }
 }
