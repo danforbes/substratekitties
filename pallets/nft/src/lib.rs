@@ -60,20 +60,24 @@ mod mock;
 mod tests;
 
 pub trait Trait<I = DefaultInstance>: system::Trait {
-    // The dispatch origin that is able to mint new instances of this type of asset.
+    /// The dispatch origin that is able to mint new instances of this type of asset.
     type AssetAdmin: EnsureOrigin<Self::Origin>;
-    // The data type that is used to describe this type of asset.
+    /// The data type that is used to describe this type of asset.
     type AssetInfo: Hashable + Member + Debug + Default + FullCodec;
-    // The maximum number of this type of asset that may exist (minted - burned)..
+    /// The maximum number of this type of asset that may exist (minted - burned)..
     type AssetLimit: Get<u128>;
-    // The maximum number of this type of asset that any single account may own.
+    /// The maximum number of this type of asset that any single account may own.
     type UserAssetLimit: Get<u64>;
     type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
 }
 
-// The runtime system's hashing algorithm is used to uniquely identify assets.
+/// The runtime system's hashing algorithm is used to uniquely identify assets.
 pub type AssetId<T> = <T as frame_system::Trait>::Hash;
 
+/// An alias for this pallet's NFT implementation.
+pub type IdentifiedAssetFor<T, I> = IdentifiedAsset<AssetId<T>, <T as Trait<I>>::AssetInfo>;
+
+/// A generic definition of an NFT that will be used by this pallet.
 #[derive(Encode, Decode, Clone, Eq, RuntimeDebug)]
 pub struct IdentifiedAsset<Hash, AssetInfo> {
     pub id: Hash,
@@ -98,7 +102,6 @@ impl<AssetId: Eq, AssetInfo> PartialEq for IdentifiedAsset<AssetId, AssetInfo> {
     }
 }
 
-pub type IdentifiedAssetFor<T, I> = IdentifiedAsset<AssetId<T>, <T as Trait<I>>::AssetInfo>;
 impl<AssetId, AssetInfo> NFT for IdentifiedAsset<AssetId, AssetInfo> {
     type Id = AssetId;
     type Info = AssetInfo;
@@ -106,15 +109,15 @@ impl<AssetId, AssetInfo> NFT for IdentifiedAsset<AssetId, AssetInfo> {
 
 decl_storage! {
     trait Store for Module<T: Trait<I>, I: Instance = DefaultInstance> as NFT {
-        // The total number of this type of asset that exists (minted - burned).
+        /// The total number of this type of asset that exists (minted - burned).
         Total get(fn total): u128 = 0;
-        // The total number of this type of asset that has been burned (may overflow).
+        /// The total number of this type of asset that has been burned (may overflow).
         Burned get(fn burned): u128 = 0;
-        // The total number of this type of asset owned by an account.
+        /// The total number of this type of asset owned by an account.
         TotalForAccount get(fn total_for_account): map hasher(blake2_128_concat) T::AccountId => u64 = 0;
-        // A mapping from an asset owner & ID to the info for that asset.
+        /// A mapping from an account to a list of all of the assets of this type that are owned by it.
         AssetsForAccount get(fn assets_for_account): map hasher(blake2_128_concat) T::AccountId => Vec<IdentifiedAssetFor<T, I>>;
-        // A mapping from an asset ID to the account that owns it.
+        /// A mapping from an asset ID to the account that owns it.
         AccountForAsset get(fn account_for_asset): map hasher(identity) AssetId<T> => T::AccountId;
     }
 }
@@ -125,11 +128,11 @@ decl_event!(
         AssetId = <T as frame_system::Trait>::Hash,
         AccountId = <T as system::Trait>::AccountId,
     {
-        // The asset has been burned.
+        /// The asset has been burned.
         Burned(AssetId),
-        // The asset has been minted and distributed to the account.
+        /// The asset has been minted and distributed to the account.
         Minted(AssetId, AccountId),
-        // Ownership of the asset has been transferred to the account.
+        /// Ownership of the asset has been transferred to the account.
         Transferred(AssetId, AccountId),
     }
 );
@@ -220,32 +223,32 @@ decl_module! {
 }
 
 impl<T: Trait<I>, I: Instance> Module<T, I> {
-    // The total number of this type of asset that exists (minted - burned).
+    /// The total number of this type of asset that exists (minted - burned).
     pub fn total_assets() -> u128 {
         Self::total()
     }
 
-    // The total number of this type of asset that has been burned (may overflow).
+    /// The total number of this type of asset that has been burned (may overflow).
     pub fn total_burned() -> u128 {
         Self::burned()
     }
 
-    // The total number of this type of asset owned by an account.
+    /// The total number of this type of asset owned by an account.
     pub fn total_assets_for_account(account: T::AccountId) -> u64 {
         Self::total_for_account(account)
     }
 
-    // All of this type of asset owned by an account.
+    /// All of this type of asset owned by an account.
     pub fn all_assets_for_account(account: T::AccountId) -> Vec<IdentifiedAssetFor<T, I>> {
         Self::assets_for_account(account)
     }
 
-    // The ID of the account that owns an asset.
+    /// The ID of the account that owns an asset.
     pub fn owner_of(asset_id: AssetId<T>) -> T::AccountId {
         Self::account_for_asset(asset_id)
     }
 
-    // Use the provided asset info to create a new unique asset for the specified user.
+    /// Use the provided asset info to create a new unique asset for the specified user.
     pub fn mint_asset(
         owner_account: &T::AccountId,
         asset_info: T::AssetInfo,
@@ -285,7 +288,7 @@ impl<T: Trait<I>, I: Instance> Module<T, I> {
         Ok(asset_id)
     }
 
-    // Destroy an asset.
+    /// Destroy an asset.
     pub fn burn_asset(asset_id: AssetId<T>) -> dispatch::DispatchResult {
         let owner = Self::owner_of(asset_id);
         ensure!(
@@ -312,7 +315,7 @@ impl<T: Trait<I>, I: Instance> Module<T, I> {
         Ok(())
     }
 
-    // Transfer ownership of an asset to another account.
+    /// Transfer ownership of an asset to another account.
     pub fn transfer_asset(
         dest_account: &T::AccountId,
         asset_id: AssetId<T>,
