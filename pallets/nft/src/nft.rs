@@ -9,7 +9,7 @@
 //! attributes (the asset info type). An asset ID type distinguishes unique assets from one another.
 //! Assets may be created (minted), destroyed (burned) or transferred.
 //!
-//! This trait is implemented in the `lib.rs` file for this crate.
+//! This abstraction is implemented by [nft::Module](../struct.Module.html).
 
 use frame_support::dispatch;
 use sp_std::vec::Vec;

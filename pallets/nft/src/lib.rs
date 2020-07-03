@@ -17,7 +17,8 @@
 //! own. Assets are uniquely identified by the hash of the info that defines
 //! them, as calculated by the runtime system's hashing algorithm.
 //!
-//! This pallet implements the `UniqueAssets` trait.
+//! This pallet implements the [`UniqueAssets`](./nft/trait.UniqueAssets.html)
+//! trait.
 //!
 //! ### Dispatchable Functions
 //!
@@ -50,7 +51,7 @@ use sp_std::{
     vec::Vec,
 };
 
-mod nft;
+pub mod nft;
 use crate::nft::{UniqueAssets, NFT};
 
 #[cfg(test)]
@@ -64,7 +65,7 @@ pub trait Trait<I = DefaultInstance>: system::Trait {
     type AssetAdmin: EnsureOrigin<Self::Origin>;
     /// The data type that is used to describe this type of asset.
     type AssetInfo: Hashable + Member + Debug + Default + FullCodec;
-    /// The maximum number of this type of asset that may exist (minted - burned)..
+    /// The maximum number of this type of asset that may exist (minted - burned).
     type AssetLimit: Get<u128>;
     /// The maximum number of this type of asset that any single account may own.
     type UserAssetLimit: Get<u64>;
