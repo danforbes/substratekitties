@@ -265,7 +265,7 @@ impl<T: Trait<I>, I: Instance>
             Error::<T, I>::TooManyAssets
         );
 
-        let new_asset = IdentifiedAsset::<AssetId<T>, <T as Trait<I>>::AssetInfo> {
+        let new_asset = IdentifiedAsset {
             id: asset_id,
             asset: asset_info,
         };
@@ -300,10 +300,10 @@ impl<T: Trait<I>, I: Instance>
         Burned::<I>::mutate(|total| *total += 1);
         TotalForAccount::<T, I>::mutate(&owner, |total| *total -= 1);
         AssetsForAccount::<T, I>::mutate(owner, |assets| {
-            match assets.binary_search(&burn_asset) {
-                Ok(pos) => assets.remove(pos),
-                Err(_pos) => burn_asset, // should never happen
-            }
+            let pos = assets
+                .binary_search(&burn_asset)
+                .expect("We already checked that we have the correct owner; qed");
+            assets.remove(pos);
         });
         AccountForAsset::<T, I>::remove(&asset_id);
 
@@ -331,10 +331,10 @@ impl<T: Trait<I>, I: Instance>
         TotalForAccount::<T, I>::mutate(&owner, |total| *total -= 1);
         TotalForAccount::<T, I>::mutate(dest_account, |total| *total += 1);
         let asset = AssetsForAccount::<T, I>::mutate(owner, |assets| {
-            match assets.binary_search(&xfer_asset) {
-                Ok(pos) => assets.remove(pos),
-                Err(_pos) => xfer_asset, // should never happen
-            }
+            let pos = assets
+                .binary_search(&xfer_asset)
+                .expect("We already checked that we have the correct owner; qed");
+            assets.remove(pos)
         });
         AssetsForAccount::<T, I>::mutate(dest_account, |assets| {
             match assets.binary_search(&asset) {

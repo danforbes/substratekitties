@@ -28,6 +28,7 @@ Thanks to the following people who helped me overcome my relatively limited unde
 - @riusricardo
 - @rphmeier
 - @thiolliere
+- @gnunicorn
 
 ## Upstream
 
