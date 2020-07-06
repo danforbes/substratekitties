@@ -69,7 +69,7 @@ pub trait Trait<I = DefaultInstance>: system::Trait {
     type AssetLimit: Get<u128>;
     /// The maximum number of this type of asset that any single account may own.
     type UserAssetLimit: Get<u64>;
-    type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
+    type Event: From<Event<Self, I>> + Into<<Self as system::Trait>::Event>;
 }
 
 /// The runtime system's hashing algorithm is used to uniquely identify assets.
@@ -126,7 +126,7 @@ decl_storage! {
 decl_event!(
     pub enum Event<T, I = DefaultInstance>
     where
-        AssetId = <T as frame_system::Trait>::Hash,
+        AssetId = <T as system::Trait>::Hash,
         AccountId = <T as system::Trait>::AccountId,
     {
         /// The asset has been burned.
@@ -176,11 +176,7 @@ decl_module! {
         #[weight = 10_000]
         pub fn mint(origin, owner_account: T::AccountId, asset_info: T::AssetInfo) -> dispatch::DispatchResult {
             T::AssetAdmin::ensure_origin(origin)?;
-
-            let asset_id = Self::mint_asset(&owner_account, asset_info)?;
-
-            Self::deposit_event(RawEvent::Minted(asset_id, owner_account));
-            Ok(())
+            <Self as UniqueAssets<_, _>>::mint(&owner_account, asset_info)
         }
 
         /// Destroy the specified asset.
@@ -194,10 +190,7 @@ decl_module! {
             let who = ensure_signed(origin)?;
             ensure!(who == Self::account_for_asset(&asset_id), Error::<T, I>::NotAssetOwner);
 
-            Self::burn_asset(asset_id)?;
-
-            Self::deposit_event(RawEvent::Burned(asset_id));
-            Ok(())
+            <Self as UniqueAssets<_, _>>::burn(&asset_id)
         }
 
         /// Transfer an asset to a new owner.
@@ -215,45 +208,46 @@ decl_module! {
             let who = ensure_signed(origin)?;
             ensure!(who == Self::account_for_asset(&asset_id), Error::<T, I>::NotAssetOwner);
 
-            Self::transfer_asset(&dest_account, asset_id)?;
-
-            Self::deposit_event(RawEvent::Transferred(asset_id, dest_account));
-            Ok(())
+            <Self as UniqueAssets<_, _>>::transfer(&dest_account, &asset_id)
         }
     }
 }
 
-impl<T: Trait<I>, I: Instance> Module<T, I> {
-    /// The total number of this type of asset that exists (minted - burned).
-    pub fn total_assets() -> u128 {
+impl<T: Trait<I>, I: Instance>
+    UniqueAssets<
+        <T as system::Trait>::AccountId,
+        IdentifiedAsset<AssetId<T>, <T as Trait<I>>::AssetInfo>,
+    > for Module<T, I>
+{
+    type AssetLimit = T::AssetLimit;
+    type UserAssetLimit = T::UserAssetLimit;
+
+    fn total() -> u128 {
         Self::total()
     }
 
-    /// The total number of this type of asset that has been burned (may overflow).
-    pub fn total_burned() -> u128 {
+    fn burned() -> u128 {
         Self::burned()
     }
 
-    /// The total number of this type of asset owned by an account.
-    pub fn total_assets_for_account(account: T::AccountId) -> u64 {
+    fn total_for_account(account: &T::AccountId) -> u64 {
         Self::total_for_account(account)
     }
 
-    /// All of this type of asset owned by an account.
-    pub fn all_assets_for_account(account: T::AccountId) -> Vec<IdentifiedAssetFor<T, I>> {
+    fn assets_for_account(
+        account: &T::AccountId,
+    ) -> Vec<IdentifiedAsset<AssetId<T>, <T as Trait<I>>::AssetInfo>> {
         Self::assets_for_account(account)
     }
 
-    /// The ID of the account that owns an asset.
-    pub fn owner_of(asset_id: AssetId<T>) -> T::AccountId {
+    fn owner_of(asset_id: &AssetId<T>) -> T::AccountId {
         Self::account_for_asset(asset_id)
     }
 
-    /// Use the provided asset info to create a new unique asset for the specified user.
-    pub fn mint_asset(
+    fn mint(
         owner_account: &T::AccountId,
-        asset_info: T::AssetInfo,
-    ) -> dispatch::result::Result<AssetId<T>, dispatch::DispatchError> {
+        asset_info: <T as Trait<I>>::AssetInfo,
+    ) -> dispatch::DispatchResult {
         let asset_id = T::Hashing::hash_of(&asset_info);
 
         ensure!(
@@ -286,11 +280,11 @@ impl<T: Trait<I>, I: Instance> Module<T, I> {
         });
         AccountForAsset::<T, I>::insert(asset_id, &owner_account);
 
-        Ok(asset_id)
+        Self::deposit_event(RawEvent::Minted(asset_id, owner_account.clone()));
+        Ok(())
     }
 
-    /// Destroy an asset.
-    pub fn burn_asset(asset_id: AssetId<T>) -> dispatch::DispatchResult {
+    fn burn(asset_id: &AssetId<T>) -> dispatch::DispatchResult {
         let owner = Self::owner_of(asset_id);
         ensure!(
             owner != T::AccountId::default(),
@@ -298,7 +292,7 @@ impl<T: Trait<I>, I: Instance> Module<T, I> {
         );
 
         let burn_asset = IdentifiedAsset::<AssetId<T>, <T as Trait<I>>::AssetInfo> {
-            id: asset_id,
+            id: *asset_id,
             asset: <T as Trait<I>>::AssetInfo::default(),
         };
 
@@ -313,15 +307,12 @@ impl<T: Trait<I>, I: Instance> Module<T, I> {
         });
         AccountForAsset::<T, I>::remove(&asset_id);
 
+        Self::deposit_event(RawEvent::Burned(asset_id.clone()));
         Ok(())
     }
 
-    /// Transfer ownership of an asset to another account.
-    pub fn transfer_asset(
-        dest_account: &T::AccountId,
-        asset_id: AssetId<T>,
-    ) -> dispatch::DispatchResult {
-        let owner = Self::owner_of(asset_id);
+    fn transfer(dest_account: &T::AccountId, asset_id: &AssetId<T>) -> dispatch::DispatchResult {
+        let owner = Self::owner_of(&asset_id);
         ensure!(
             owner != T::AccountId::default(),
             Error::<T, I>::NonexistentAsset
@@ -333,7 +324,7 @@ impl<T: Trait<I>, I: Instance> Module<T, I> {
         );
 
         let xfer_asset = IdentifiedAsset::<AssetId<T>, <T as Trait<I>>::AssetInfo> {
-            id: asset_id,
+            id: *asset_id,
             asset: <T as Trait<I>>::AssetInfo::default(),
         };
 
@@ -353,50 +344,10 @@ impl<T: Trait<I>, I: Instance> Module<T, I> {
         });
         AccountForAsset::<T, I>::insert(&asset_id, &dest_account);
 
+        Self::deposit_event(RawEvent::Transferred(
+            asset_id.clone(),
+            dest_account.clone(),
+        ));
         Ok(())
-    }
-}
-
-impl<T: Trait<I>, I: Instance>
-    UniqueAssets<
-        <T as system::Trait>::AccountId,
-        IdentifiedAsset<AssetId<T>, <T as Trait<I>>::AssetInfo>,
-    > for Module<T, I>
-{
-    fn total() -> u128 {
-        Self::total_assets()
-    }
-
-    fn burned() -> u128 {
-        Self::total_burned()
-    }
-
-    fn total_for_account(account: T::AccountId) -> u64 {
-        Self::total_assets_for_account(account)
-    }
-
-    fn assets_for_account(
-        account: T::AccountId,
-    ) -> Vec<IdentifiedAsset<AssetId<T>, <T as Trait<I>>::AssetInfo>> {
-        Self::all_assets_for_account(account)
-    }
-
-    fn owner_of(asset_id: AssetId<T>) -> T::AccountId {
-        Self::account_for_asset(asset_id)
-    }
-
-    fn mint(
-        owner_account: T::AccountId,
-        asset_info: <T as Trait<I>>::AssetInfo,
-    ) -> dispatch::result::Result<AssetId<T>, dispatch::DispatchError> {
-        Self::mint_asset(&owner_account, asset_info)
-    }
-
-    fn burn(asset_id: AssetId<T>) -> dispatch::DispatchResult {
-        Self::burn_asset(asset_id)
-    }
-
-    fn transfer(dest_account: T::AccountId, asset_id: AssetId<T>) -> dispatch::DispatchResult {
-        Self::transfer_asset(&dest_account, asset_id)
     }
 }
