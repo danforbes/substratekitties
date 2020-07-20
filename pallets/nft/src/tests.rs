@@ -11,8 +11,8 @@ fn mint() {
     new_test_ext().execute_with(|| {
         assert_eq!(SUT::total(), 0);
         assert_eq!(SUT::total_for_account(1), 0);
-        assert_eq!(<SUT as UniqueAssets<_, _>>::total(), 0);
-        assert_eq!(<SUT as UniqueAssets<_, _>>::total_for_account(&1), 0);
+        assert_eq!(<SUT as UniqueAssets<_>>::total(), 0);
+        assert_eq!(<SUT as UniqueAssets<_>>::total_for_account(&1), 0);
         assert_eq!(
             SUT::account_for_asset::<H256>(Vec::<u8>::default().blake2_256().into()),
             0
@@ -21,11 +21,11 @@ fn mint() {
         assert_ok!(SUT::mint(Origin::root(), 1, Vec::<u8>::default()));
 
         assert_eq!(SUT::total(), 1);
-        assert_eq!(<SUT as UniqueAssets<_, _>>::total(), 1);
+        assert_eq!(<SUT as UniqueAssets<_>>::total(), 1);
         assert_eq!(SUT::burned(), 0);
-        assert_eq!(<SUT as UniqueAssets<_, _>>::burned(), 0);
+        assert_eq!(<SUT as UniqueAssets<_>>::burned(), 0);
         assert_eq!(SUT::total_for_account(1), 1);
-        assert_eq!(<SUT as UniqueAssets<_, _>>::total_for_account(&1), 1);
+        assert_eq!(<SUT as UniqueAssets<_>>::total_for_account(&1), 1);
         let assets_for_account = SUT::assets_for_account::<u64>(1);
         assert_eq!(assets_for_account.len(), 1);
         assert_eq!(

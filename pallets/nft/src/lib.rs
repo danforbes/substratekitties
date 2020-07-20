@@ -176,7 +176,7 @@ decl_module! {
         #[weight = 10_000]
         pub fn mint(origin, owner_account: T::AccountId, asset_info: T::AssetInfo) -> dispatch::DispatchResult {
             T::AssetAdmin::ensure_origin(origin)?;
-            <Self as UniqueAssets<_, _>>::mint(&owner_account, asset_info)
+            <Self as UniqueAssets<_>>::mint(&owner_account, asset_info)
         }
 
         /// Destroy the specified asset.
@@ -190,7 +190,7 @@ decl_module! {
             let who = ensure_signed(origin)?;
             ensure!(who == Self::account_for_asset(&asset_id), Error::<T, I>::NotAssetOwner);
 
-            <Self as UniqueAssets<_, _>>::burn(&asset_id)
+            <Self as UniqueAssets<_>>::burn(&asset_id)
         }
 
         /// Transfer an asset to a new owner.
@@ -208,17 +208,15 @@ decl_module! {
             let who = ensure_signed(origin)?;
             ensure!(who == Self::account_for_asset(&asset_id), Error::<T, I>::NotAssetOwner);
 
-            <Self as UniqueAssets<_, _>>::transfer(&dest_account, &asset_id)
+            <Self as UniqueAssets<_>>::transfer(&dest_account, &asset_id)
         }
     }
 }
 
-impl<T: Trait<I>, I: Instance>
-    UniqueAssets<
-        <T as system::Trait>::AccountId,
-        IdentifiedAsset<AssetId<T>, <T as Trait<I>>::AssetInfo>,
-    > for Module<T, I>
+impl<T: Trait<I>, I: Instance> UniqueAssets<IdentifiedAsset<AssetId<T>, <T as Trait<I>>::AssetInfo>>
+    for Module<T, I>
 {
+    type AccountId = <T as system::Trait>::AccountId;
     type AssetLimit = T::AssetLimit;
     type UserAssetLimit = T::UserAssetLimit;
 
