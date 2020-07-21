@@ -176,7 +176,10 @@ decl_module! {
         #[weight = 10_000]
         pub fn mint(origin, owner_account: T::AccountId, asset_info: T::AssetInfo) -> dispatch::DispatchResult {
             T::AssetAdmin::ensure_origin(origin)?;
-            <Self as UniqueAssets<_>>::mint(&owner_account, asset_info)
+
+            let asset_id = <Self as UniqueAssets<_>>::mint(&owner_account, asset_info)?;
+            Self::deposit_event(RawEvent::Minted(asset_id, owner_account.clone()));
+            Ok(())
         }
 
         /// Destroy the specified asset.
@@ -190,7 +193,9 @@ decl_module! {
             let who = ensure_signed(origin)?;
             ensure!(who == Self::account_for_asset(&asset_id), Error::<T, I>::NotAssetOwner);
 
-            <Self as UniqueAssets<_>>::burn(&asset_id)
+            <Self as UniqueAssets<_>>::burn(&asset_id)?;
+            Self::deposit_event(RawEvent::Burned(asset_id.clone()));
+            Ok(())
         }
 
         /// Transfer an asset to a new owner.
@@ -208,7 +213,9 @@ decl_module! {
             let who = ensure_signed(origin)?;
             ensure!(who == Self::account_for_asset(&asset_id), Error::<T, I>::NotAssetOwner);
 
-            <Self as UniqueAssets<_>>::transfer(&dest_account, &asset_id)
+            <Self as UniqueAssets<_>>::transfer(&dest_account, &asset_id)?;
+            Self::deposit_event(RawEvent::Transferred(asset_id.clone(), dest_account.clone()));
+            Ok(())
         }
     }
 }
@@ -245,7 +252,7 @@ impl<T: Trait<I>, I: Instance> UniqueAssets<IdentifiedAsset<AssetId<T>, <T as Tr
     fn mint(
         owner_account: &T::AccountId,
         asset_info: <T as Trait<I>>::AssetInfo,
-    ) -> dispatch::DispatchResult {
+    ) -> dispatch::result::Result<AssetId<T>, dispatch::DispatchError> {
         let asset_id = T::Hashing::hash_of(&asset_info);
 
         ensure!(
@@ -278,8 +285,7 @@ impl<T: Trait<I>, I: Instance> UniqueAssets<IdentifiedAsset<AssetId<T>, <T as Tr
         });
         AccountForAsset::<T, I>::insert(asset_id, &owner_account);
 
-        Self::deposit_event(RawEvent::Minted(asset_id, owner_account.clone()));
-        Ok(())
+        Ok(asset_id)
     }
 
     fn burn(asset_id: &AssetId<T>) -> dispatch::DispatchResult {
@@ -305,7 +311,6 @@ impl<T: Trait<I>, I: Instance> UniqueAssets<IdentifiedAsset<AssetId<T>, <T as Tr
         });
         AccountForAsset::<T, I>::remove(&asset_id);
 
-        Self::deposit_event(RawEvent::Burned(asset_id.clone()));
         Ok(())
     }
 
@@ -342,10 +347,6 @@ impl<T: Trait<I>, I: Instance> UniqueAssets<IdentifiedAsset<AssetId<T>, <T as Tr
         });
         AccountForAsset::<T, I>::insert(&asset_id, &dest_account);
 
-        Self::deposit_event(RawEvent::Transferred(
-            asset_id.clone(),
-            dest_account.clone(),
-        ));
         Ok(())
     }
 }

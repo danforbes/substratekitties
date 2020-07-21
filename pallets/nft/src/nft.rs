@@ -11,11 +11,14 @@
 //!
 //! This abstraction is implemented by [nft::Module](../struct.Module.html).
 
-use frame_support::{dispatch, traits::Get};
+use frame_support::{
+    dispatch::{result::Result, DispatchError, DispatchResult},
+    traits::Get,
+};
 use sp_std::vec::Vec;
 
-/// A unique asset; assets with equivalent attributes (as defined by the Info type) *must* have an
-/// equal ID and assets with different IDs *must not* have equivalent attributes.
+/// A unique asset; assets with equivalent attributes (as defined by the Info type) **must** have an
+/// equal ID and assets with different IDs **must not** have equivalent attributes.
 pub trait NFT {
     /// The type used to identify unique assets.
     type Id;
@@ -44,9 +47,21 @@ pub trait UniqueAssets<Asset: NFT> {
     fn owner_of(asset_id: &Asset::Id) -> Self::AccountId;
 
     /// Use the provided asset info to create a new unique asset for the specified user.
-    fn mint(owner_account: &Self::AccountId, asset_info: Asset::Info) -> dispatch::DispatchResult;
+    /// This method **must** return an error in the following cases:
+    /// - The asset, as identified by the asset info, already exists.
+    /// - The specified owner account has already reached the user asset limit.
+    /// - The total asset limit has already been reached.
+    fn mint(
+        owner_account: &Self::AccountId,
+        asset_info: Asset::Info,
+    ) -> Result<Asset::Id, DispatchError>;
     /// Destroy an asset.
-    fn burn(asset_id: &Asset::Id) -> dispatch::DispatchResult;
+    /// This method **must** return an error in the following case:
+    /// - The asset with the specified ID does not exist.
+    fn burn(asset_id: &Asset::Id) -> DispatchResult;
     /// Transfer ownership of an asset to another account.
-    fn transfer(dest_account: &Self::AccountId, asset_id: &Asset::Id) -> dispatch::DispatchResult;
+    /// This method **must** return an error in the following cases:
+    /// - The asset with the specified ID does not exist.
+    /// - The destination account has already reached the user asset limit.
+    fn transfer(dest_account: &Self::AccountId, asset_id: &Asset::Id) -> DispatchResult;
 }
