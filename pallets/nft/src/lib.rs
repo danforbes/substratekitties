@@ -52,7 +52,7 @@ use sp_std::{
 };
 
 pub mod nft;
-use crate::nft::{UniqueAssets, NFT};
+pub use crate::nft::{UniqueAssets, NFT};
 
 #[cfg(test)]
 mod mock;
