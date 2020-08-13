@@ -52,5 +52,15 @@ decl_module! {
 		// DNA and power derived from parents
 		// each parent randomly "contributes" power
 		// offspring owner randomly assigned between parent owners
+
+		// TODO: SELL
+		// post intent to sell including price
+
+		// TODO: BUY
+		// respond to intent to sell
+		// transfer funds to seller and transfer kitty ownership
+
+		// TODO: RELEASE
+		// burn kitty and unlock funds
 	}
 }
