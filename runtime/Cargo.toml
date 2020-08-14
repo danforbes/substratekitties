@@ -1,16 +1,14 @@
-[dependencies.aura]
-default-features = false
-git = 'https://github.com/paritytech/substrate.git'
-package = 'pallet-aura'
-tag = 'v2.0.0-rc5'
+[package]
+authors = ['Dan Forbes <dan@parity.io>']
+edition = '2018'
+homepage = 'https://github.com/danforbes/substrate-node-template/tree/nft'
+license = 'Unlicense'
+name = 'nft-node-runtime'
+repository = 'https://github.com/danforbes/substrate-node-template/tree/nft'
 version = '2.0.0-rc5'
 
-[dependencies.balances]
-default-features = false
-git = 'https://github.com/paritytech/substrate.git'
-package = 'pallet-balances'
-tag = 'v2.0.0-rc5'
-version = '2.0.0-rc5'
+[package.metadata.docs.rs]
+targets = ['x86_64-unknown-linux-gnu']
 
 [dependencies.codec]
 default-features = false
@@ -30,17 +28,56 @@ git = 'https://github.com/paritytech/substrate.git'
 tag = 'v2.0.0-rc5'
 version = '2.0.0-rc5'
 
-[dependencies.grandpa]
+[dependencies.frame-system]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-package = 'pallet-grandpa'
 tag = 'v2.0.0-rc5'
 version = '2.0.0-rc5'
 
-[dependencies.randomness-collective-flip]
+[dependencies.pallet-aura]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-package = 'pallet-randomness-collective-flip'
+tag = 'v2.0.0-rc5'
+version = '2.0.0-rc5'
+
+[dependencies.pallet-balances]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+tag = 'v2.0.0-rc5'
+version = '2.0.0-rc5'
+
+[dependencies.pallet-grandpa]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+tag = 'v2.0.0-rc5'
+version = '2.0.0-rc5'
+
+[dependencies.pallet-randomness-collective-flip]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+tag = 'v2.0.0-rc5'
+version = '2.0.0-rc5'
+
+[dependencies.pallet-sudo]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+tag = 'v2.0.0-rc5'
+version = '2.0.0-rc5'
+
+[dependencies.pallet-nft]
+default-features = false
+git = 'https://github.com/danforbes/pallet-nft.git'
+version = '2.0.0-rc5'
+
+[dependencies.pallet-timestamp]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+tag = 'v2.0.0-rc5'
+version = '2.0.0-rc5'
+
+[dependencies.pallet-transaction-payment]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
 tag = 'v2.0.0-rc5'
 version = '2.0.0-rc5'
 
@@ -121,50 +158,6 @@ git = 'https://github.com/paritytech/substrate.git'
 tag = 'v2.0.0-rc5'
 version = '2.0.0-rc5'
 
-[dependencies.sudo]
-default-features = false
-git = 'https://github.com/paritytech/substrate.git'
-package = 'pallet-sudo'
-tag = 'v2.0.0-rc5'
-version = '2.0.0-rc5'
-
-[dependencies.system]
-default-features = false
-git = 'https://github.com/paritytech/substrate.git'
-package = 'frame-system'
-tag = 'v2.0.0-rc5'
-version = '2.0.0-rc5'
-
-[dependencies.nft]
-default-features = false
-package = 'pallet-nft'
-git = 'https://github.com/danforbes/pallet-nft.git'
-version = '2.0.0-rc5'
-
-[dependencies.timestamp]
-default-features = false
-git = 'https://github.com/paritytech/substrate.git'
-package = 'pallet-timestamp'
-tag = 'v2.0.0-rc5'
-version = '2.0.0-rc5'
-
-[dependencies.transaction-payment]
-default-features = false
-git = 'https://github.com/paritytech/substrate.git'
-package = 'pallet-transaction-payment'
-tag = 'v2.0.0-rc5'
-version = '2.0.0-rc5'
-
-[package]
-authors = ['Dan Forbes <dan@parity.io>']
-edition = '2018'
-homepage = 'https://github.com/danforbes/substrate-node-template/tree/nft'
-license = 'Unlicense'
-name = 'nft-node-runtime'
-repository = 'https://github.com/danforbes/substrate-node-template/tree/nft'
-version = '2.0.0-rc5'
-[package.metadata.docs.rs]
-targets = ['x86_64-unknown-linux-gnu']
 [build-dependencies.wasm-builder-runner]
 git = 'https://github.com/paritytech/substrate.git'
 package = 'substrate-wasm-builder-runner'
@@ -174,13 +167,18 @@ version = '1.0.5'
 [features]
 default = ['std']
 std = [
-    'aura/std',
-    'balances/std',
     'codec/std',
     'frame-executive/std',
     'frame-support/std',
-    'grandpa/std',
-    'randomness-collective-flip/std',
+    'frame-system/std',
+    'pallet-aura/std',
+    'pallet-balances/std',
+    'pallet-grandpa/std',
+    'pallet-nft/std',
+    'pallet-randomness-collective-flip/std',
+    'pallet-sudo/std',
+    'pallet-timestamp/std',
+    'pallet-transaction-payment/std',
     'serde',
     'sp-api/std',
     'sp-block-builder/std',
@@ -194,9 +192,4 @@ std = [
     'sp-std/std',
     'sp-transaction-pool/std',
     'sp-version/std',
-    'sudo/std',
-    'system/std',
-    'timestamp/std',
-    'transaction-payment/std',
-    'nft/std'
 ]

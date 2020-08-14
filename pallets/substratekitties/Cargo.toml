@@ -29,9 +29,8 @@ git = 'https://github.com/paritytech/substrate.git'
 tag = 'v2.0.0-rc5'
 version = '2.0.0-rc5'
 
-[dependencies.nft]
+[dependencies.pallet-nft]
 default-features = false
-package = 'pallet-nft'
 git = 'https://github.com/danforbes/pallet-nft.git'
 version = '2.0.0-rc5'
 
@@ -59,6 +58,6 @@ std = [
     'codec/std',
     'frame-support/std',
     'frame-system/std',
-    'nft/std',
+    'pallet-nft/std',
     'sp-runtime/std',
 ]
