@@ -41,7 +41,7 @@ pub use sp_runtime::BuildStorage;
 pub use sp_runtime::{Perbill, Permill};
 pub use pallet_timestamp::Call as TimestampCall;
 
-pub use pallet_nft;
+pub use pallet_commodities;
 
 /// An index to a block.
 pub type BlockNumber = u32;
@@ -270,13 +270,13 @@ parameter_types! {
     pub const MaxKittiesPerUser: u64 = 256;
 }
 
-// impl pallet_nft::Trait for Runtime {
-//     type AssetAdmin = frame_system::EnsureRoot<AccountId>;
-//     type AssetInfo = KittyInfo;
-//     type AssetLimit = MaxKitties;
-//     type UserAssetLimit = MaxKittiesPerUser;
-//     type Event = Event;
-// }
+impl pallet_commodities::Trait for Runtime {
+    type AssetAdmin = frame_system::EnsureRoot<AccountId>;
+    type AssetInfo = KittyInfo;
+    type AssetLimit = MaxKitties;
+    type UserAssetLimit = MaxKittiesPerUser;
+    type Event = Event;
+}
 
 construct_runtime!(
     pub enum Runtime where
@@ -292,7 +292,7 @@ construct_runtime!(
         Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>},
         TransactionPayment: pallet_transaction_payment::{Module, Storage},
         Sudo: pallet_sudo::{Module, Call, Config<T>, Storage, Event<T>},
-        // Substratekitties: pallet_nft::{Module, Call, Storage, Event<T>},
+        Substratekitties: pallet_commodities::{Module, Call, Storage, Event<T>},
     }
 );
 

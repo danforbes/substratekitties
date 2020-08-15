@@ -2984,8 +2984,8 @@ dependencies = [
  "frame-system",
  "pallet-aura",
  "pallet-balances",
+ "pallet-commodities",
  "pallet-grandpa",
- "pallet-nft",
  "pallet-randomness-collective-flip",
  "pallet-sudo",
  "pallet-timestamp",
@@ -3225,6 +3225,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-commodities"
+version = "1.0.0-rc5"
+source = "git+https://github.com/danforbes/pallet-nft.git?tag=v1.0.0-rc5#113e900e0bf5b8b83378e1e1cacc785df3b8b879"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-finality-tracker"
 version = "2.0.0-rc5"
 source = "git+https://github.com/paritytech/substrate.git?tag=v2.0.0-rc5#e00d78cb1c354001d868fa66938a827a432dc530"
@@ -3259,18 +3271,6 @@ dependencies = [
  "sp-runtime",
  "sp-session",
  "sp-staking",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-nft"
-version = "2.0.0-rc5"
-source = "git+https://github.com/danforbes/pallet-nft.git#f02b147e2cdace0fec478882dcde9a669b60b834"
-dependencies = [
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "sp-runtime",
  "sp-std",
 ]
 
@@ -6173,7 +6173,7 @@ version = "2.0.0-rc5"
 dependencies = [
  "frame-support",
  "frame-system",
- "pallet-nft",
+ "pallet-commodities",
  "parity-scale-codec",
  "sp-core",
  "sp-io",
@@ -6739,7 +6739,7 @@ version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3bfd5b7557925ce778ff9b9ef90e3ade34c524b5ff10e239c69a42d546d2af56"
 dependencies = [
- "rand 0.7.3",
+ "rand 0.3.23",
 ]
 
 [[package]]

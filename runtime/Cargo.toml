@@ -46,6 +46,12 @@ git = 'https://github.com/paritytech/substrate.git'
 tag = 'v2.0.0-rc5'
 version = '2.0.0-rc5'
 
+[dependencies.pallet-commodities]
+default-features = false
+git = 'https://github.com/danforbes/pallet-nft.git'
+tag = 'v1.0.0-rc5'
+version = '1.0.0-rc5'
+
 [dependencies.pallet-grandpa]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
@@ -62,11 +68,6 @@ version = '2.0.0-rc5'
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
 tag = 'v2.0.0-rc5'
-version = '2.0.0-rc5'
-
-[dependencies.pallet-nft]
-default-features = false
-git = 'https://github.com/danforbes/pallet-nft.git'
 version = '2.0.0-rc5'
 
 [dependencies.pallet-timestamp]
@@ -173,8 +174,8 @@ std = [
     'frame-system/std',
     'pallet-aura/std',
     'pallet-balances/std',
+    'pallet-commodities/std',
     'pallet-grandpa/std',
-    'pallet-nft/std',
     'pallet-randomness-collective-flip/std',
     'pallet-sudo/std',
     'pallet-timestamp/std',
