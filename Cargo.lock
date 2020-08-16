@@ -2987,6 +2987,7 @@ dependencies = [
  "pallet-commodities",
  "pallet-grandpa",
  "pallet-randomness-collective-flip",
+ "pallet-substratekitties",
  "pallet-sudo",
  "pallet-timestamp",
  "pallet-transaction-payment",
@@ -3226,8 +3227,8 @@ dependencies = [
 
 [[package]]
 name = "pallet-commodities"
-version = "1.0.0-rc5"
-source = "git+https://github.com/danforbes/pallet-nft.git?tag=v1.0.0-rc5#113e900e0bf5b8b83378e1e1cacc785df3b8b879"
+version = "1.0.0-rc6"
+source = "git+https://github.com/danforbes/pallet-nft.git#c6eb1eaae7a6b5347d26624347d69b6a44b098c3"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -3305,6 +3306,19 @@ dependencies = [
  "sp-staking",
  "sp-std",
  "sp-trie",
+]
+
+[[package]]
+name = "pallet-substratekitties"
+version = "2.0.0-rc5"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "pallet-commodities",
+ "parity-scale-codec",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
 ]
 
 [[package]]
@@ -6165,19 +6179,6 @@ dependencies = [
  "wasmtime-runtime",
  "wat",
  "winapi 0.3.9",
-]
-
-[[package]]
-name = "substratekitties"
-version = "2.0.0-rc5"
-dependencies = [
- "frame-support",
- "frame-system",
- "pallet-commodities",
- "parity-scale-codec",
- "sp-core",
- "sp-io",
- "sp-runtime",
 ]
 
 [[package]]

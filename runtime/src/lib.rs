@@ -69,6 +69,9 @@ pub type Hash = sp_core::H256;
 /// Digest item type.
 pub type DigestItem = generic::DigestItem<Hash>;
 
+/// A timestamp: milliseconds since the unix epoch.
+pub type Moment = u64;
+
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
 /// of data like extrinsics, allowing for them to continue syncing the network through upgrades
@@ -112,6 +115,10 @@ pub const SLOT_DURATION: u64 = MILLISECS_PER_BLOCK;
 pub const MINUTES: BlockNumber = 60_000 / (MILLISECS_PER_BLOCK as BlockNumber);
 pub const HOURS: BlockNumber = MINUTES * 60;
 pub const DAYS: BlockNumber = HOURS * 24;
+
+pub const MILLICENTS: Balance = 1_000_000_000;
+pub const CENTS: Balance = 1_000 * MILLICENTS;
+pub const DOLLARS: Balance = 100 * CENTS;
 
 /// The version information used to identify this runtime when compiled natively.
 #[cfg(feature = "std")]
@@ -219,8 +226,7 @@ parameter_types! {
 }
 
 impl pallet_timestamp::Trait for Runtime {
-    /// A timestamp: milliseconds since the unix epoch.
-    type Moment = u64;
+    type Moment = Moment;
     type OnTimestampSet = Aura;
     type MinimumPeriod = MinimumPeriod;
     type WeightInfo = ();
@@ -258,23 +264,38 @@ impl pallet_sudo::Trait for Runtime {
     type Call = Call;
 }
 
-/// Implement the Substratekitties unique asset
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode, Default, RuntimeDebug)]
-pub struct KittyInfo {
-    name: Vec<u8>,
-    color: [u8; 3],
-}
-
 parameter_types! {
     pub const MaxKitties: u128 = 2^64;
     pub const MaxKittiesPerUser: u64 = 256;
 }
 
+/// Implement the Substratekitties unique asset
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode, Default, RuntimeDebug)]
+pub struct KittyInfo {
+    dob: Moment,
+    dna: Hash,
+}
+
+// Use the default commodity instance.
 impl pallet_commodities::Trait for Runtime {
-    type AssetAdmin = frame_system::EnsureRoot<AccountId>;
-    type AssetInfo = KittyInfo;
-    type AssetLimit = MaxKitties;
-    type UserAssetLimit = MaxKittiesPerUser;
+    type CommodityAdmin = frame_system::EnsureRoot<AccountId>;
+    type CommodityInfo = KittyInfo;
+    type CommodityLimit = MaxKitties;
+    type UserCommodityLimit = MaxKittiesPerUser;
+    type Event = Event;
+}
+
+parameter_types! {
+    pub const BasePrice: Balance = 1 * DOLLARS;
+}
+
+impl pallet_substratekitties::Trait for Runtime {
+    type Kitty = pallet_commodities::Commodity<Hash, KittyInfo>;
+    type Kitties = pallet_commodities::Module<Runtime>;
+    type Time = pallet_timestamp::Module<Runtime>;
+    type Randomness = pallet_randomness_collective_flip::Module<Runtime>;
+    type Currency = pallet_balances::Module<Runtime>;
+    type BasePrice = BasePrice;
     type Event = Event;
 }
 
@@ -292,7 +313,8 @@ construct_runtime!(
         Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>},
         TransactionPayment: pallet_transaction_payment::{Module, Storage},
         Sudo: pallet_sudo::{Module, Call, Config<T>, Storage, Event<T>},
-        Substratekitties: pallet_commodities::{Module, Call, Storage, Event<T>},
+        KittiesCommodities: pallet_commodities::{Module, Call, Storage, Event<T>},
+        Substratekitties: pallet_substratekitties::{Module, Call, Event<T>},
     }
 );
 
