@@ -6,12 +6,11 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-use codec::{Decode, Encode};
 use pallet_grandpa::fg_primitives;
 use pallet_grandpa::{AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList};
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
-use sp_core::{crypto::KeyTypeId, OpaqueMetadata, RuntimeDebug};
+use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
 use sp_runtime::traits::{
     BlakeTwo256, Block as BlockT, IdentifyAccount, IdentityLookup, NumberFor, Saturating, Verify,
 };
@@ -269,17 +268,10 @@ parameter_types! {
     pub const MaxKittiesPerUser: u64 = 256;
 }
 
-/// Implement the Substratekitties unique asset
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode, Default, RuntimeDebug)]
-pub struct KittyInfo {
-    dob: Moment,
-    dna: Hash,
-}
-
 // Use the default commodity instance.
 impl pallet_commodities::Trait for Runtime {
     type CommodityAdmin = frame_system::EnsureRoot<AccountId>;
-    type CommodityInfo = KittyInfo;
+    type CommodityInfo = pallet_substratekitties::KittyInfo<Hash, Moment>;
     type CommodityLimit = MaxKitties;
     type UserCommodityLimit = MaxKittiesPerUser;
     type Event = Event;
@@ -290,7 +282,7 @@ parameter_types! {
 }
 
 impl pallet_substratekitties::Trait for Runtime {
-    type Kitty = pallet_commodities::Commodity<Hash, KittyInfo>;
+    type Kitty = pallet_commodities::Commodity<Hash, pallet_substratekitties::KittyInfo<Hash, Moment>>;
     type Kitties = pallet_commodities::Module<Runtime>;
     type Time = pallet_timestamp::Module<Runtime>;
     type Randomness = pallet_randomness_collective_flip::Module<Runtime>;
