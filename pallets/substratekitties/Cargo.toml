@@ -6,7 +6,7 @@ homepage = 'https://github.com/danforbes/substrate-node-template/tree/nft'
 license = 'Unlicense'
 name = 'pallet-substratekitties'
 repository = 'https://github.com/danforbes/substrate-node-template/tree/nft'
-version = '2.0.0-rc5'
+version = '2.0.0-rc6'
 
 [package.metadata.docs.rs]
 targets = ['x86_64-unknown-linux-gnu']
@@ -20,14 +20,14 @@ version = '1.3.1'
 [dependencies.frame-support]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-tag = 'v2.0.0-rc5'
-version = '2.0.0-rc5'
+tag = 'v2.0.0-rc6'
+version = '2.0.0-rc6'
 
 [dependencies.frame-system]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-tag = 'v2.0.0-rc5'
-version = '2.0.0-rc5'
+tag = 'v2.0.0-rc6'
+version = '2.0.0-rc6'
 
 [dependencies.pallet-commodities]
 default-features = false
@@ -37,20 +37,20 @@ version = '1.0.0-rc6'
 [dependencies.sp-runtime]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-tag = 'v2.0.0-rc5'
-version = '2.0.0-rc5'
+tag = 'v2.0.0-rc6'
+version = '2.0.0-rc6'
 
 [dev-dependencies.sp-core]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-tag = 'v2.0.0-rc5'
-version = '2.0.0-rc5'
+tag = 'v2.0.0-rc6'
+version = '2.0.0-rc6'
 
 [dev-dependencies.sp-io]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-tag = 'v2.0.0-rc5'
-version = '2.0.0-rc5'
+tag = 'v2.0.0-rc6'
+version = '2.0.0-rc6'
 
 [features]
 default = ['std']
