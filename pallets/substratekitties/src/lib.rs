@@ -3,12 +3,12 @@
 use codec::{Decode, Encode};
 use frame_support::{
 	decl_error, decl_event, decl_module, dispatch,
-	traits::{Currency, Get, LockIdentifier, LockableCurrency, /* Randomness, Time, */ WithdrawReason},
+	traits::{Currency, Get, LockIdentifier, LockableCurrency, Randomness, Time, WithdrawReason},
 };
 use frame_system::ensure_signed;
 use sp_core::RuntimeDebug;
 
-// use pallet_commodities::nft::UniqueAssets;
+use pallet_commodities::nft::UniqueAssets;
 
 #[cfg(test)]
 mod mock;
@@ -63,8 +63,8 @@ decl_module! {
 			let who = ensure_signed(origin)?;
 			T::Currency::set_lock(MODULE_ID, &who, T::BasePrice::get(), WithdrawReason::Fee | WithdrawReason::Reserve);
 			// ERROR: expected pallet_commodities::nft::UniqueAssets::AccountId, found frame_system::Trait::AccountId
-			// ERROR: ambiguous associated type, use fully-qualified syntax (<<T as Trait>::Kitty as Trait>::AssetInfo)
-			// T::Kitties::mint(&who, KittyInfo{dob: T::Time::now(), dna: T::Randomness::random(&MODULE_ID)});
+			// ERROR: expected associated type pallet_commodities::NFT::Info, found struct KittyInfo<frame_system::Trait::Hash, frame_support::traits::Time::Moment>
+			T::Kitties::mint(&who, KittyInfo{dob: T::Time::now(), dna: T::Randomness::random(&MODULE_ID)});
 			Ok(())
 			
 			// TODO: DNA used to derive avatar https://www.peppercarrot.com/extras/html/2016_cat-generator/

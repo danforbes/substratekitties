@@ -3627,7 +3627,7 @@ dependencies = [
 [[package]]
 name = "pallet-commodities"
 version = "1.0.0-rc6"
-source = "git+https://github.com/danforbes/pallet-nft.git#b8c2e73595861627b04faf180137b2f884b31315"
+source = "git+https://github.com/danforbes/pallet-nft.git?tag=v1.0.0-rc6#b8c2e73595861627b04faf180137b2f884b31315"
 dependencies = [
  "frame-support",
  "frame-system",
