@@ -34,11 +34,16 @@ pub fn new_partial(
         sp_consensus::DefaultImportQueue<Block, FullClient>,
         sc_transaction_pool::FullPool<Block, FullClient>,
         (
-            sc_finality_grandpa::GrandpaBlockImport<
-                FullBackend,
+            sc_consensus_aura::AuraBlockImport<
                 Block,
                 FullClient,
-                FullSelectChain,
+                sc_finality_grandpa::GrandpaBlockImport<
+                    FullBackend,
+                    Block,
+                    FullClient,
+                    FullSelectChain,
+                >,
+                AuraPair,
             >,
             sc_finality_grandpa::LinkHalf<Block, FullClient, FullSelectChain>,
         ),
@@ -73,7 +78,7 @@ pub fn new_partial(
 
     let import_queue = sc_consensus_aura::import_queue::<_, _, _, AuraPair, _, _>(
         sc_consensus_aura::slot_duration(&*client)?,
-        aura_block_import,
+        aura_block_import.clone(),
         Some(Box::new(grandpa_block_import.clone())),
         None,
         client.clone(),
@@ -92,7 +97,7 @@ pub fn new_partial(
         select_chain,
         transaction_pool,
         inherent_data_providers,
-        other: (grandpa_block_import, grandpa_link),
+        other: (aura_block_import, grandpa_link),
     })
 }
 
