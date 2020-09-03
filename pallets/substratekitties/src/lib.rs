@@ -2,11 +2,12 @@
 
 use codec::{Decode, Encode};
 use frame_support::{
-    decl_error, decl_event, decl_module, dispatch,
+    decl_error, decl_event, decl_module, decl_storage, dispatch,
     traits::{Currency, Get, LockIdentifier, LockableCurrency, Randomness, Time, WithdrawReason},
 };
 use frame_system::ensure_signed;
 use sp_core::RuntimeDebug;
+use sp_std::vec::Vec;
 
 use pallet_commodities::nft::UniqueAssets;
 
@@ -18,11 +19,17 @@ mod tests;
 
 const MODULE_ID: LockIdentifier = *b"subkitis";
 
-/// Implement the Substratekitties unique asset
+/// Attributes that uniquely identify a kitty
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode, Default, RuntimeDebug)]
 pub struct KittyInfo<Hash, Moment> {
     dob: Moment,
     dna: Hash,
+}
+
+/// Attributes that do not uniquely identify a kitty
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode, Default, RuntimeDebug)]
+pub struct KittyMetadata {
+    name: Vec<u8>,
 }
 
 type BalanceOf<T> =
@@ -41,6 +48,12 @@ pub trait Trait: frame_system::Trait {
     type Currency: frame_support::traits::LockableCurrency<Self::AccountId>;
     type BasePrice: Get<BalanceOf<Self>>;
     type Event: From<Event<Self>> + Into<<Self as frame_system::Trait>::Event>;
+}
+
+decl_storage! {
+    trait Store for Module<T: Trait> as Substratekitties {
+        MetadataForKitty get(fn metadata_for_kitty): map hasher(identity) T::Hash => KittyMetadata;
+    }
 }
 
 decl_event!(
@@ -68,17 +81,19 @@ decl_module! {
         ///
         /// The dispatch origin for this call must be Signed.
         #[weight = 10_000]
-        pub fn conjure(origin) -> dispatch::DispatchResult {
+        pub fn conjure(origin, name: Vec<u8>) -> dispatch::DispatchResult {
             let who = ensure_signed(origin)?;
             T::Currency::set_lock(MODULE_ID, &who, T::BasePrice::get(), WithdrawReason::Fee | WithdrawReason::Reserve);
             match T::Kitties::mint(&who, KittyInfo{dob: T::Time::now(), dna: T::Randomness::random(&MODULE_ID)}) {
-                Ok(id) => { Self::deposit_event(RawEvent::Conjured(id, who)) },
+                Ok(id) => {
+                    MetadataForKitty::<T>::insert(id, KittyMetadata{name: name});
+                    Self::deposit_event(RawEvent::Conjured(id, who));
+                },
                 Err(err) => Err(err)?
             }
 
             // TODO: DNA used to derive avatar https://www.peppercarrot.com/extras/html/2016_cat-generator/
             // TODO: define an implicit mechanism for deriving a kitty's power from its DNA
-            // TODO: store variable kitty metadata (name, etc) in this pallet
             // TODO: allow senders to supply extra funds to lock, which will serve as a power boost
 
             Ok(())

@@ -305,7 +305,7 @@ construct_runtime!(
         TransactionPayment: pallet_transaction_payment::{Module, Storage},
         Sudo: pallet_sudo::{Module, Call, Config<T>, Storage, Event<T>},
         KittiesCommodities: pallet_commodities::{Module, Call, Storage, Event<T>},
-        Substratekitties: pallet_substratekitties::{Module, Call, Event<T>},
+        Substratekitties: pallet_substratekitties::{Module, Call, Storage, Event<T>},
     }
 );
 
