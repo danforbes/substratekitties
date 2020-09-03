@@ -3626,8 +3626,8 @@ dependencies = [
 
 [[package]]
 name = "pallet-commodities"
-version = "1.0.0-rc6"
-source = "git+https://github.com/danforbes/pallet-nft.git?tag=v1.0.0-rc6#b8c2e73595861627b04faf180137b2f884b31315"
+version = "1.0.0-rc7"
+source = "git+https://github.com/danforbes/pallet-nft.git#cb3cb2aeab67f5cb14d956c441a7e5f4ede7075a"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -7241,7 +7241,7 @@ version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3bfd5b7557925ce778ff9b9ef90e3ade34c524b5ff10e239c69a42d546d2af56"
 dependencies = [
- "rand 0.7.3",
+ "rand 0.3.23",
 ]
 
 [[package]]

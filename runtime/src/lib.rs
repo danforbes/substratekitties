@@ -282,7 +282,6 @@ parameter_types! {
 }
 
 impl pallet_substratekitties::Trait for Runtime {
-    type Kitty = pallet_commodities::Commodity<Hash, pallet_substratekitties::KittyInfo<Hash, Moment>>;
     type Kitties = pallet_commodities::Module<Runtime>;
     type Time = pallet_timestamp::Module<Runtime>;
     type Randomness = pallet_randomness_collective_flip::Module<Runtime>;

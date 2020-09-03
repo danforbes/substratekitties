@@ -27,10 +27,10 @@ pub struct KittyInfo<Hash, Moment> {
 
 type BalanceOf<T> =
 	<<T as Trait>::Currency as Currency<<T as frame_system::Trait>::AccountId>>::Balance;
+type KittyInfoOf<T> = KittyInfo<<T as frame_system::Trait>::Hash, <<T as Trait>::Time as Time>::Moment>;
 
 pub trait Trait: frame_system::Trait {
-	type Kitty: pallet_commodities::nft::NFT;
-	type Kitties: pallet_commodities::nft::UniqueAssets<Self::Kitty>;
+	type Kitties: pallet_commodities::nft::UniqueAssets<Self::AccountId, AssetId = Self::Hash, AssetInfo = KittyInfoOf<Self>>;
 	type Time: frame_support::traits::Time;
 	type Randomness: frame_support::traits::Randomness<Self::Hash>;
 	type Currency: frame_support::traits::LockableCurrency<Self::AccountId>;
@@ -39,8 +39,8 @@ pub trait Trait: frame_system::Trait {
 }
 
 decl_event!(
-	pub enum Event<T> where AccountId = <T as frame_system::Trait>::AccountId {
-		KittyConjured(AccountId),
+	pub enum Event<T> where KittyId = <T as frame_system::Trait>::Hash, AccountId = <T as frame_system::Trait>::AccountId {
+		Conjured(KittyId, AccountId),
 	}
 );
 
@@ -62,15 +62,17 @@ decl_module! {
 		pub fn conjure(origin) -> dispatch::DispatchResult {
 			let who = ensure_signed(origin)?;
 			T::Currency::set_lock(MODULE_ID, &who, T::BasePrice::get(), WithdrawReason::Fee | WithdrawReason::Reserve);
-			// ERROR: expected pallet_commodities::nft::UniqueAssets::AccountId, found frame_system::Trait::AccountId
-			// ERROR: expected associated type pallet_commodities::NFT::Info, found struct KittyInfo<frame_system::Trait::Hash, frame_support::traits::Time::Moment>
-			T::Kitties::mint(&who, KittyInfo{dob: T::Time::now(), dna: T::Randomness::random(&MODULE_ID)});
-			Ok(())
+			match T::Kitties::mint(&who, KittyInfo{dob: T::Time::now(), dna: T::Randomness::random(&MODULE_ID)}) {
+				Ok(id) => { Self::deposit_event(RawEvent::Conjured(id, who)) },
+				Err(err) => Err(err)?
+			}
 			
 			// TODO: DNA used to derive avatar https://www.peppercarrot.com/extras/html/2016_cat-generator/
 			// TODO: define an implicit mechanism for deriving a kitty's power from its DNA
 			// TODO: store variable kitty metadata (name, etc) in this pallet
 			// TODO: allow senders to supply extra funds to lock, which will serve as a power boost
+
+			Ok(())
 		}
 
 		// TODO: BOOST
