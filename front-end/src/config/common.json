@@ -1,0 +1,22 @@
+{
+  "APP_NAME": "substratekitties",
+  "CUSTOM_TYPES": {
+    "Address": "AccountId",
+    "Commodity": {
+      "CommodityId": "CommodityId",
+      "CommodityInfo": "CommodityInfo"
+    },
+    "CommodityId": "Hash",
+    "CommodityInfo": {
+      "dob": "u64",
+      "dna": "Hash"
+    },
+    "KittyId": "Hash",
+    "KittyMetadata": {
+      "name": "Vec<u8>"
+    },
+    "LookupSource": "AccountId"
+  },
+  "DEVELOPMENT_KEYRING": true,
+  "RPC": {}
+}

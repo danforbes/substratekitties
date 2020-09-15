@@ -92,8 +92,6 @@ decl_module! {
                 Err(err) => Err(err)?
             }
 
-            // TODO: DNA used to derive avatar https://www.peppercarrot.com/extras/html/2016_cat-generator/
-            // TODO: define an implicit mechanism for deriving a kitty's power from its DNA
             // TODO: allow senders to supply extra funds to lock, which will serve as a power boost
 
             Ok(())
