@@ -1,6 +1,6 @@
 //! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
-use nft_node_runtime::{self, opaque::Block, RuntimeApi};
+use substratekitties_runtime::{self, opaque::Block, RuntimeApi};
 use sc_client_api::{ExecutorProvider, RemoteBackend};
 use sc_executor::native_executor_instance;
 pub use sc_executor::NativeExecutor;
@@ -16,8 +16,8 @@ use std::time::Duration;
 // Our native executor instance.
 native_executor_instance!(
     pub Executor,
-    nft_node_runtime::api::dispatch,
-    nft_node_runtime::native_version,
+    substratekitties_runtime::api::dispatch,
+    substratekitties_runtime::native_version,
 );
 
 type FullClient = sc_service::TFullClient<Block, RuntimeApi, Executor>;

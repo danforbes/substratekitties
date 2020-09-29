@@ -1,4 +1,4 @@
-use nft_node_runtime::{
+use substratekitties_runtime::{
     AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig, Signature, SudoConfig,
     SystemConfig, WASM_BINARY,
 };

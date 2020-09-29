@@ -12,6 +12,20 @@ capabilities are provided by a separate library of code,
 [the Commodities pallet](https://github.com/danforbes/pallet-nft), which was built with (and is designed to be used
 with) [the FRAME system for blockchain runtime development](https://substrate.dev/docs/en/knowledgebase/runtime/frame).
 
+## Build & Run
+
+First, build & run the node:
+
+```shell
+cargo run -- --dev --tmp
+```
+
+Then build & run the UI by running the following command in the `front-end` directory:
+
+```shell
+yarn && yarn start
+```
+
 ## Acknowledgements
 
 This project was inspired by works such as the following:
