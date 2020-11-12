@@ -1,5 +1,5 @@
 import React, { useState, createRef } from 'react';
-import { Container, Dimmer, Loader, Grid, Sticky, Message } from 'semantic-ui-react';
+import { Container, Dimmer, Loader, Grid, Sticky, Message, TabPane, Tab } from 'semantic-ui-react';
 import 'semantic-ui-css/semantic.min.css';
 
 import { SubstrateContextProvider, useSubstrate } from './substrate-lib';
@@ -46,30 +46,56 @@ function Main () {
 
   const contextRef = createRef();
 
+  const TabNetwork = () => (
+    <Grid stackable columns='equal'>
+      <Grid.Row stretched>
+        <NodeInfo />
+        <Metadata />
+        <BlockNumber />
+        <BlockNumber finalized />
+      </Grid.Row>
+      <Grid.Row stretched>
+        <Balances />
+      </Grid.Row>
+      <Grid.Row>
+        <Interactor accountPair={accountPair} />
+        <Events />
+      </Grid.Row>
+    </Grid>
+  );
+  const TabKitties = () => (
+    <>
+      <Grid stackable columns='equal'>
+        <Grid.Row stretched>
+          <Substratekitties accountPair={accountPair} />
+        </Grid.Row>
+      </Grid>
+    </>
+  );
+  const panes = [
+    {
+      menuItem: {
+        name: 'Kitties',
+        key: 'app-kitties'
+      },
+      render: () => <Tab.Pane key='Kitties'><TabKitties /></Tab.Pane>
+    },
+    {
+      menuItem: {
+        name: 'Network',
+        key: 'app-network'
+      },
+      render: () => <Tab.Pane key='Network'><TabNetwork /></Tab.Pane>
+    }
+  ];
+
   return (
     <div ref={contextRef}>
       <Sticky context={contextRef}>
         <AccountSelector setAccountAddress={setAccountAddress} />
       </Sticky>
       <Container>
-        <Grid stackable columns='equal'>
-          <Grid.Row stretched>
-            <NodeInfo />
-            <Metadata />
-            <BlockNumber />
-            <BlockNumber finalized />
-          </Grid.Row>
-          <Grid.Row stretched>
-            <Substratekitties accountPair={accountPair} />
-          </Grid.Row>
-          <Grid.Row stretched>
-            <Balances />
-          </Grid.Row>
-          <Grid.Row>
-            <Interactor accountPair={accountPair} />
-            <Events />
-          </Grid.Row>
-        </Grid>
+        <Tab panes={panes} />
       </Container>
       <DeveloperConsole />
     </div>
