@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Grid, Header, Icon } from 'semantic-ui-react';
+import styled from 'styled-components';
+import theme from './theme';
+import { Button, Card, Grid, Header, Icon } from 'semantic-ui-react';
 
 import { useSubstrate } from './substrate-lib';
 
 import { KittyAvatar } from './kitty-avatar';
+import { KittyPower } from './KittyPower';
 
 function hexToString (hex) {
   hex = hex.substr(2);
@@ -20,6 +23,56 @@ function calculatePower (hex) {
   hex = hex.substr(2);
   return parseInt(hex[parseInt(hex[hex.length - 1], 16)], 16);
 }
+
+const KittyButtonsWrap = styled(Button.Group)`
+  &&& {
+    width: 100%;
+    border: none;
+    justify-content: space-between;
+    margin-top: -2rem;
+    
+    .ui.button {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 18%;
+      padding: 0.5rem !important;
+      background-color: ${theme.colors.app.highlight};
+      border: 1px solid ${theme.colors.app.border};
+      border-radius: 0.5rem;
+      margin-top: 3rem;
+
+      &.central {
+        margin-top: 0;
+        z-index: 0;
+      }
+      &.forKittiesConsole {
+        color: ${theme.colors.console.border} !important;
+        border-color: ${theme.colors.console.border};
+        &:hover {
+          background-color: ${theme.colors.console.bg};
+        }
+      }
+      &.animated .visible.content {
+        margin: 0;
+      }
+
+      b {
+        margin-top: 0.5rem;
+      }
+      .icon {
+        margin: 0;
+      }
+      small {
+        display: block;
+        word-break: break-all;
+        font-size: 7px;
+        line-height: 1.2em;
+      }
+    }
+  }
+`;
 
 function Main (props) {
   const { api } = useSubstrate();
@@ -82,9 +135,43 @@ function Main (props) {
 
             </Card.Content>
             <Card.Content>
-              DOB: {kitty.dob.toDateString()}<br></br>
-              Power: {kitty.power}
+
               <KittyAvatar dna={kitty.dna} />
+              <KittyButtonsWrap compact size='tiny'>
+                <Button animated='fade'>
+                  <Button.Content visible>
+                    <small>{kitty.id}</small>
+                  </Button.Content>
+                  <Button.Content hidden>
+                    <Icon name='copy'/>
+                  </Button.Content>
+                  <b>ID</b>
+                </Button>
+                <Button animated='fade'>
+                  <Button.Content visible>
+                    <small>{props.accountPair.address}</small>
+                  </Button.Content>
+                  <Button.Content hidden>
+                    <Icon name='copy'/>
+                  </Button.Content>
+                  <b>owner</b>
+                </Button>
+                <Button className='central'>
+                  <KittyPower power={kitty.power} />
+                  <b>Power</b>
+                </Button>
+                <Button className='forKittiesConsole'>
+                  <small/>
+                  <Icon name='heart' size='large'/>
+                  <b>Flirt</b>
+                </Button>
+                <Button className='forKittiesConsole'>
+                  <small/>
+                  <Icon name='shopping basket' size='large'/>
+                  <b>Buy</b>
+                </Button>
+              </KittyButtonsWrap>
+
             </Card.Content>
           </Card>;
         })}
