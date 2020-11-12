@@ -7,6 +7,7 @@ import { useSubstrate } from './substrate-lib';
 
 import { KittyAvatar } from './kitty-avatar';
 import { KittyPower } from './KittyPower';
+import KittyInteractor from './KittyInteractor';
 
 function hexToString (hex) {
   hex = hex.substr(2);
@@ -114,7 +115,7 @@ function Main (props) {
   }, [kittyCommodities, api.query.substratekitties.metadataForKitty]);
 
   return (
-    <Grid.Column>
+    <>
       <Card.Group itemsPerRow={3}>
         {kitties.map((kitty) => {
           return <Card key={kitty.id} raised>
@@ -176,7 +177,9 @@ function Main (props) {
           </Card>;
         })}
       </Card.Group>
-    </Grid.Column>
+
+      <KittyInteractor accountPair={props.accountPair} />
+    </>
   );
 }
 

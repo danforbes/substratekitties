@@ -1,5 +1,5 @@
 import React, { useState, createRef } from 'react';
-import { Container, Dimmer, Loader, Grid, Sticky, Message, TabPane, Tab } from 'semantic-ui-react';
+import { Container, Dimmer, Loader, Grid, Sticky, Message, Tab } from 'semantic-ui-react';
 import 'semantic-ui-css/semantic.min.css';
 
 import { SubstrateContextProvider, useSubstrate } from './substrate-lib';
@@ -10,6 +10,7 @@ import Balances from './Balances';
 import BlockNumber from './BlockNumber';
 import Events from './Events';
 import Interactor from './Interactor';
+
 import Substratekitties from './Substratekitties';
 import Metadata from './Metadata';
 import NodeInfo from './NodeInfo';
@@ -63,22 +64,17 @@ function Main () {
       </Grid.Row>
     </Grid>
   );
-  const TabKitties = () => (
-    <>
-      <Grid stackable columns='equal'>
-        <Grid.Row stretched>
-          <Substratekitties accountPair={accountPair} />
-        </Grid.Row>
-      </Grid>
-    </>
-  );
+
   const panes = [
     {
       menuItem: {
         name: 'Kitties',
         key: 'app-kitties'
       },
-      render: () => <Tab.Pane key='Kitties'><TabKitties /></Tab.Pane>
+      render: () =>
+        <Tab.Pane key='Kitties'>
+          <Substratekitties accountPair={accountPair} />
+        </Tab.Pane>
     },
     {
       menuItem: {
