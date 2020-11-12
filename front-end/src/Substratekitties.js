@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Grid } from 'semantic-ui-react';
+import { Card, Grid, Header, Icon } from 'semantic-ui-react';
 
 import { useSubstrate } from './substrate-lib';
 
@@ -62,11 +62,26 @@ function Main (props) {
 
   return (
     <Grid.Column>
-      <Card.Group>
+      <Card.Group itemsPerRow={3}>
         {kitties.map((kitty) => {
-          return <Card key={kitty.id}>
+          return <Card key={kitty.id} raised>
             <Card.Content>
-              {kitty.name}<br></br>
+
+              <Grid padded={false}>
+                <Grid.Column width={10}>
+                  <Header as='h3' floated='left'>
+                    {kitty.name}
+                  </Header>
+                </Grid.Column>
+                <Grid.Column width={6} textAlign='right'>
+                  <Icon link name='eraser'/>
+                  <Icon link name='heart'/>
+                  <Icon link name='shopping basket'/>
+                </Grid.Column>
+              </Grid>
+
+            </Card.Content>
+            <Card.Content>
               DOB: {kitty.dob.toDateString()}<br></br>
               Power: {kitty.power}
               <KittyAvatar dna={kitty.dna} />
