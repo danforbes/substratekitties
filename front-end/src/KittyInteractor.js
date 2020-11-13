@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Grid, Form, Dropdown, Input, Label, Tab } from 'semantic-ui-react';
+import { Grid, Input, Label, Tab } from 'semantic-ui-react';
 
 import { useSubstrate } from './substrate-lib';
 import { TxGroupButton } from './substrate-lib/components';
@@ -18,7 +18,7 @@ function Main (props) {
 
   const initFormState = {
     palletRpc: 'substratekitties',
-    callable: '',
+    callable: 'conjure',
     inputParams: []
   };
 
@@ -82,68 +82,58 @@ function Main (props) {
       : 'Leaving this field as blank will submit a NONE value';
 
   return (
-    <Grid.Column width={8}>
-      <Form>
-        <Form.Field>
-          <Dropdown
-            placeholder='Callables'
-            fluid
-            label='Callable'
-            onChange={onPalletCallableParamChange}
-            search
-            selection
-            state='callable'
-            value={callable}
-            options={callables}
-          />
+    <Tab
+      state='callable'
+      onTabChange={onPalletCallableParamChange}
+      panes={
+        callables.map(c => {
+          return {
+            menuItem: c.text,
+            value: c.text,
+            render: () =>
+              <Grid>
+                <Grid.Column width={8}>
+                  api.tx.substratekitties.{c.text} ('
 
-          <Tab
-            state='callable'
-            panes={
-              callables.map(c => {
-                return {
-                  menuItem: c.text,
-                  value: c.text,
-                  state: 'callable'
-                };
-              })
-            }
-            onTabChange={onPalletCallableParamChange}
-          />
+                  {paramFields.map((paramField, ind) =>
+                    <div key={ind}>
 
-        </Form.Field>
-        {paramFields.map((paramField, ind) =>
-          <Form.Field key={`${paramField.name}-${paramField.type}`}>
-            <Input
-              placeholder={paramField.type}
-              fluid
-              type='text'
-              label={paramField.name}
-              state={{ ind, paramField }}
-              value={ inputParams[ind] ? inputParams[ind].value : '' }
-              onChange={onPalletCallableParamChange}
-            />
-            { paramField.optional
-              ? <Label
-                basic
-                pointing
-                color='teal'
-                content = { getOptionalMsg(interxType) }
-              />
-              : null
-            }
-          </Form.Field>
-        )}
-        <Form.Field style={{ textAlign: 'center' }}>
-          <InteractorSubmit
-            accountPair={accountPair}
-            setStatus={setStatus}
-            attrs={{ interxType, palletRpc, callable, inputParams, paramFields }}
-          />
-        </Form.Field>
-        <div style={{ overflowWrap: 'break-word' }}>{status}</div>
-      </Form>
-    </Grid.Column>
+                      <label>{paramField.name}</label>
+                      <Input
+                        placeholder={paramField.type}
+                        type='text'
+                        state={{ ind, paramField }}
+                        value={ inputParams[ind] ? inputParams[ind].value : '' }
+                        onChange={onPalletCallableParamChange}
+                      />
+                      { paramField.optional
+                        ? <Label
+                          basic
+                          pointing
+                          color='teal'
+                          content = { getOptionalMsg(interxType) }
+                        />
+                        : null
+                      }
+
+                    </div>
+                  )}
+
+                  ')
+                </Grid.Column>
+                <Grid.Column width={3}>
+                  <InteractorSubmit
+                    accountPair={accountPair}
+                    setStatus={setStatus}
+                    attrs={{ interxType, palletRpc, callable, inputParams, paramFields }}
+                  />
+                </Grid.Column>
+                <div style={{ overflowWrap: 'break-word' }}>{status}</div>
+              </Grid>
+          };
+        })
+      }
+    />
   );
 }
 
