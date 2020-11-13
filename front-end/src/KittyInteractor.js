@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Grid, Input, Label, Tab } from 'semantic-ui-react';
+import { Container, Grid, Input, Label, Tab } from 'semantic-ui-react';
 
 import { useSubstrate } from './substrate-lib';
 import { TxGroupButton } from './substrate-lib/components';
+
+import KittyInteractorStyleWrap from './KittyInteractorStyleWrap';
 
 const argIsOptional = (arg) =>
   arg.type.toString().startsWith('Option<');
@@ -82,58 +84,62 @@ function Main (props) {
       : 'Leaving this field as blank will submit a NONE value';
 
   return (
-    <Tab
-      state='callable'
-      onTabChange={onPalletCallableParamChange}
-      panes={
-        callables.map(c => {
-          return {
-            menuItem: c.text,
-            value: c.text,
-            render: () =>
-              <Grid>
-                <Grid.Column width={8}>
-                  api.tx.substratekitties.{c.text} ('
+    <KittyInteractorStyleWrap>
+      <Container>
+        <Tab
+          state='callable'
+          onTabChange={onPalletCallableParamChange}
+          panes={
+            callables.map(c => {
+              return {
+                menuItem: c.text,
+                value: c.text,
+                render: () =>
+                  <Grid>
+                    <code>
+                      api.tx.substratekitties.{c.text}('
 
-                  {paramFields.map((paramField, ind) =>
-                    <div key={ind}>
+                      {paramFields.map((paramField, ind) =>
+                        <span key={ind}>
 
-                      <label>{paramField.name}</label>
-                      <Input
-                        placeholder={paramField.type}
-                        type='text'
-                        state={{ ind, paramField }}
-                        value={ inputParams[ind] ? inputParams[ind].value : '' }
-                        onChange={onPalletCallableParamChange}
+                          <label>{paramField.name}</label>
+                          <Input
+                            placeholder={paramField.type}
+                            type='text'
+                            state={{ ind, paramField }}
+                            value={ inputParams[ind] ? inputParams[ind].value : '' }
+                            onChange={onPalletCallableParamChange}
+                          />
+                          { paramField.optional
+                            ? <Label
+                              basic
+                              pointing
+                              color='teal'
+                              content = { getOptionalMsg(interxType) }
+                            />
+                            : null
+                          }
+
+                        </span>
+                      )}
+
+                    ').signAndSend
+                    ('
+                      <InteractorSubmit
+                        accountPair={accountPair}
+                        setStatus={setStatus}
+                        attrs={{ interxType, palletRpc, callable, inputParams, paramFields }}
                       />
-                      { paramField.optional
-                        ? <Label
-                          basic
-                          pointing
-                          color='teal'
-                          content = { getOptionalMsg(interxType) }
-                        />
-                        : null
-                      }
-
-                    </div>
-                  )}
-
-                  ')
-                </Grid.Column>
-                <Grid.Column width={3}>
-                  <InteractorSubmit
-                    accountPair={accountPair}
-                    setStatus={setStatus}
-                    attrs={{ interxType, palletRpc, callable, inputParams, paramFields }}
-                  />
-                </Grid.Column>
-                <div style={{ overflowWrap: 'break-word' }}>{status}</div>
-              </Grid>
-          };
-        })
-      }
-    />
+                    ')
+                    </code>
+                    <div style={{ overflowWrap: 'break-word' }}>{status}</div>
+                  </Grid>
+              };
+            })
+          }
+        />
+      </Container>
+    </KittyInteractorStyleWrap>
   );
 }
 

@@ -255,14 +255,14 @@ function TxGroupButton (props) {
       <TxButton
         label='Signed'
         type='SIGNED-TX'
-        color='blue'
+        color='green'
         {...props}
       />
       <Button.Or />
       <TxButton
         label='SUDO'
         type='SUDO-TX'
-        color='red'
+        color='pink'
         {...props}
       />
     </Button.Group>
