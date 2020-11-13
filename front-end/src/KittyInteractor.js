@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Grid, Form, Dropdown, Input, Label } from 'semantic-ui-react';
+import { Grid, Form, Dropdown, Input, Label, Tab } from 'semantic-ui-react';
 
 import { useSubstrate } from './substrate-lib';
 import { TxGroupButton } from './substrate-lib/components';
@@ -49,7 +49,7 @@ function Main (props) {
         optional: argIsOptional(arg)
       }));
     }
-    
+
     setParamFields(paramFields);
   };
 
@@ -67,7 +67,10 @@ function Main (props) {
         inputParams[ind] = { type, value };
         res = { ...formState, inputParams };
       } else if (state === 'callable') {
-        res = { ...formState, [state]: value, inputParams: [] };
+        // from dropdown or tab
+        value === undefined
+          ? res = { ...formState, [state]: callables[data.activeIndex].value, inputParams: [] }
+          : res = { ...formState, [state]: value, inputParams: [] };
       }
       return res;
     });
@@ -93,6 +96,21 @@ function Main (props) {
             value={callable}
             options={callables}
           />
+
+          <Tab
+            state='callable'
+            panes={
+              callables.map(c => {
+                return {
+                  menuItem: c.text,
+                  value: c.text,
+                  state: 'callable'
+                };
+              })
+            }
+            onTabChange={onPalletCallableParamChange}
+          />
+
         </Form.Field>
         {paramFields.map((paramField, ind) =>
           <Form.Field key={`${paramField.name}-${paramField.type}`}>
