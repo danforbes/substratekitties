@@ -59,6 +59,9 @@ function Main (props) {
   useEffect(updateParamFields, [api, interxType, palletRpc, callable]);
 
   const onPalletCallableParamChange = (_, data) => {
+    if (data.activeIndex === data.panes.length - 1) {
+      return
+    }
     setFormState(formState => {
       let res;
       const { state, value } = data;
@@ -71,7 +74,7 @@ function Main (props) {
       } else if (state === 'callable') {
         // from dropdown or tab
         value === undefined
-          ? res = { ...formState, [state]: callables[data.activeIndex].value, inputParams: [] }
+          ? res = { ...formState, [state]: callables[data.activeIndex - staticPanes.length].value, inputParams: [] }
           : res = { ...formState, [state]: value, inputParams: [] };
       }
       return res;
@@ -82,6 +85,16 @@ function Main (props) {
     interxType === 'RPC'
       ? 'Optional Parameter'
       : 'Leaving this field as blank will submit a NONE value';
+  
+  const staticPanes = [
+    {
+      menuItem: {
+        icon: 'close',
+        className: 'close',
+        key: 'close'
+      }
+    }
+  ]
 
   return (
     <KittyInteractorStyleWrap>
@@ -89,10 +102,14 @@ function Main (props) {
         <Tab
           state='callable'
           onTabChange={onPalletCallableParamChange}
-          panes={
-            callables.map(c => {
+          panes={[
+              ...staticPanes,
+              ...callables.map(c => {
               return {
-                menuItem: c.text,
+                menuItem: {
+                  name:c.text,
+                  key:c.text,
+                },
                 value: c.text,
                 render: () =>
                   <Grid>
@@ -136,6 +153,7 @@ function Main (props) {
                   </Grid>
               };
             })
+          ]
           }
         />
       </Container>
