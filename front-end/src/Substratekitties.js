@@ -8,6 +8,7 @@ import { useSubstrate } from './substrate-lib';
 import { KittyAvatar } from './kitty-avatar';
 import { KittyPower } from './KittyPower';
 import KittyInteractor from './KittyInteractor';
+import KittyPalletConditionWrap from './KittyPalletConditionWrap';
 
 function hexToString (hex) {
   hex = hex.substr(2);
@@ -29,7 +30,7 @@ const KittyButtonsWrap = styled(Button.Group)`
   &&& {
     width: 100%;
     border: none;
-    justify-content: space-between;
+    
     margin-top: -2rem;
     
     .ui.button {
@@ -42,13 +43,13 @@ const KittyButtonsWrap = styled(Button.Group)`
       background-color: ${theme.colors.app.highlight};
       border: 1px solid ${theme.colors.app.border};
       border-radius: 0.5rem;
-      margin-top: 3rem;
+      margin: 3rem 1% 0;
 
       &.central {
         margin-top: 0;
         z-index: 0;
       }
-      &.forKittiesConsole {
+      &.callPallet {
         color: ${theme.colors.console.border} !important;
         border-color: ${theme.colors.console.border};
         &:hover {
@@ -128,9 +129,17 @@ function Main (props) {
                   </Header>
                 </Grid.Column>
                 <Grid.Column width={6} textAlign='right'>
-                  <Icon link name='eraser'/>
-                  <Icon link name='heart'/>
-                  <Icon link name='shopping basket'/>
+
+                  <KittyPalletConditionWrap pallet='release'>
+                    <Icon link name='eraser'/>
+                  </KittyPalletConditionWrap>
+                  <KittyPalletConditionWrap pallet='flirt'>
+                    <Icon link name='heart'/>
+                  </KittyPalletConditionWrap>
+                  <KittyPalletConditionWrap pallet='sell'>
+                    <Icon link name='shopping basket'/>
+                  </KittyPalletConditionWrap>
+
                 </Grid.Column>
               </Grid>
 
@@ -161,16 +170,17 @@ function Main (props) {
                   <KittyPower power={kitty.power} />
                   <b>Power</b>
                 </Button>
-                <Button className='forKittiesConsole'>
+
+                <KittyPalletConditionWrap pallet='breed'>
                   <small/>
                   <Icon name='heart' size='large'/>
-                  <b>Flirt</b>
-                </Button>
-                <Button className='forKittiesConsole'>
+                  <b>Breed</b>
+                </KittyPalletConditionWrap>
+                <KittyPalletConditionWrap pallet='buy'>
                   <small/>
                   <Icon name='shopping basket' size='large'/>
                   <b>Buy</b>
-                </Button>
+                </KittyPalletConditionWrap>
               </KittyButtonsWrap>
 
             </Card.Content>

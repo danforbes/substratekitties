@@ -14,6 +14,7 @@ import Interactor from './Interactor';
 import Substratekitties from './Substratekitties';
 import Metadata from './Metadata';
 import NodeInfo from './NodeInfo';
+import { SettingsProvider } from './KittyContext';
 
 function Main () {
   const [accountAddress, setAccountAddress] = useState(null);
@@ -101,7 +102,9 @@ function Main () {
 export default function App () {
   return (
     <SubstrateContextProvider>
-      <Main />
+      <SettingsProvider settings=''>
+        <Main />
+      </SettingsProvider>
     </SubstrateContextProvider>
   );
 }

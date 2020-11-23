@@ -96,6 +96,34 @@ decl_module! {
 
             Ok(())
         }
+        #[weight = 10_000]
+        pub fn boost(origin, foo: Vec<u8>, bar: Vec<u8>) -> dispatch::DispatchResult {
+            Ok(())
+        }
+        #[weight = 10_000]
+        pub fn recoup(origin, foo: Vec<u8>, bar: Vec<u8>) -> dispatch::DispatchResult {
+            Ok(())
+        }
+        #[weight = 10_000]
+        pub fn flirt(origin, foo: Vec<u8>) -> dispatch::DispatchResult {
+            Ok(())
+        }
+        #[weight = 10_000]
+        pub fn breed(origin, foo: Vec<u8>, bar: Vec<u8>) -> dispatch::DispatchResult {
+            Ok(())
+        }
+        #[weight = 10_000]
+        pub fn sell(origin, foo: Vec<u8>, bar: Vec<u8>) -> dispatch::DispatchResult {
+            Ok(())
+        }
+        #[weight = 10_000]
+        pub fn buy(origin, foo: Vec<u8>, bar: Vec<u8>) -> dispatch::DispatchResult {
+            Ok(())
+        }
+        #[weight = 10_000]
+        pub fn release(origin, foo: Vec<u8>) -> dispatch::DispatchResult {
+            Ok(())
+        }
 
         // TODO: BOOST
         // power up a kitty by locking more funds

@@ -5,6 +5,7 @@ import { useSubstrate } from './substrate-lib';
 import { TxGroupButton } from './substrate-lib/components';
 
 import KittyInteractorStyleWrap from './KittyInteractorStyleWrap';
+import useKittyTab from './KittyHooks';
 
 const argIsOptional = (arg) =>
   arg.type.toString().startsWith('Option<');
@@ -16,16 +17,7 @@ function Main (props) {
 
   const interxType = 'EXTRINSIC';
   const [callables, setCallables] = useState([]);
-  const [paramFields, setParamFields] = useState([]);
-
-  const initFormState = {
-    palletRpc: 'substratekitties',
-    callable: 'conjure',
-    inputParams: []
-  };
-
-  const [formState, setFormState] = useState(initFormState);
-  const { palletRpc, callable, inputParams } = formState;
+  const x = Object.keys(api.tx.substratekitties).sort();
 
   const updateCallables = () => {
     if (!api) { return; }
@@ -34,14 +26,41 @@ function Main (props) {
     setCallables(callables);
   };
 
+  const { kittyTab, setKittyTab } = useKittyTab();
+
+  const initFormState = {
+    palletRpc: 'substratekitties',
+    callable: kittyTab,
+    inputParams: []
+  };
+
+  const [formState, setFormState] = useState(initFormState);
+  const { palletRpc, callable, inputParams } = formState;
+
+  const initparamFields = (kittyTab) => {
+    let paramFields = [];
+    if (!api || !api.tx.substratekitties[kittyTab]) return;
+    const metaArgs = api.tx.substratekitties[kittyTab].meta.args;
+
+    if (metaArgs && metaArgs.length > 0) {
+      paramFields = metaArgs.map(arg => ({
+        name: arg.name.toString(),
+        type: arg.type.toString(),
+        optional: argIsOptional(arg)
+      }));
+    }
+    return paramFields;
+  };
+
+  const [paramFields, setParamFields] = useState(initparamFields);
+
   const updateParamFields = () => {
-    if (!api || callable === '') {
+    if (!api || callable === '' || !api.tx.substratekitties[callable]) {
       setParamFields([]);
       return;
     }
 
     let paramFields = [];
-
     const metaArgs = api.tx.substratekitties[callable].meta.args;
 
     if (metaArgs && metaArgs.length > 0) {
@@ -59,13 +78,17 @@ function Main (props) {
   useEffect(updateParamFields, [api, interxType, palletRpc, callable]);
 
   const onPalletCallableParamChange = (_, data) => {
+    if (data.state === 'callable') setKittyTab(x[data.activeIndex - staticPanes.length]);
+
     // static panes do not correspond to callables and come first
-    if (data.activeIndex <= staticPanes.length) {
-      return;
+    if (data.activeIndex < staticPanes.length) {
+      return false;
     }
+
     setFormState(formState => {
       let res;
       const { state, value } = data;
+
       if (typeof state === 'object') {
         // Input parameter updated
         const { ind, paramField: { type } } = state;
@@ -73,10 +96,7 @@ function Main (props) {
         inputParams[ind] = { type, value };
         res = { ...formState, inputParams };
       } else if (state === 'callable') {
-        // from dropdown or tab
-        value === undefined
-          ? res = { ...formState, [state]: callables[data.activeIndex - staticPanes.length].value, inputParams: [] }
-          : res = { ...formState, [state]: value, inputParams: [] };
+        res = { ...formState, [state]: callables[data.activeIndex - staticPanes.length].value, inputParams: [] };
       }
       return res;
     });
@@ -101,6 +121,11 @@ function Main (props) {
     <KittyInteractorStyleWrap>
       <Container>
         <Tab
+          activeIndex={
+            x.indexOf(kittyTab) !== -1
+              ? x.indexOf(kittyTab) + staticPanes.length
+              : 0
+          }
           state='callable'
           onTabChange={onPalletCallableParamChange}
           panes={[
@@ -117,7 +142,7 @@ function Main (props) {
                     <code>
                       api.tx.substratekitties.{c.text}('
 
-                      {paramFields.map((paramField, ind) =>
+                      {initparamFields(kittyTab).map((paramField, ind) =>
                         <span key={ind}>
 
                           <label>{paramField.name}</label>
@@ -166,7 +191,7 @@ function InteractorSubmit (props) {
   return <TxGroupButton {...props} />;
 }
 
-export default function Interactor (props) {
+export default function KittyInteractor (props) {
   const { api } = useSubstrate();
   return api.tx ? <Main {...props} /> : null;
 }

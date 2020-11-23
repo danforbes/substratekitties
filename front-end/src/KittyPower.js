@@ -1,6 +1,7 @@
 import React from 'react';
 import { Segment } from 'semantic-ui-react';
 import styled from 'styled-components';
+import { useSubstrate } from './substrate-lib';
 import theme from './theme';
 
 const KittyPowerWrap = styled.div`
@@ -34,11 +35,13 @@ function KittyPower ({
   power = 1,
   boost = 0 // placeholder for boosted part of power
 }) {
+  const { api } = useSubstrate();
+
   return (
     <KittyPowerWrap>
       <KittyPowerBars>
         <div />
-        <div className='boost' />
+        { api.tx.substratekitties.boost && <div className='boost' /> }
       </KittyPowerBars>
       <Segment compact>
         {power}
