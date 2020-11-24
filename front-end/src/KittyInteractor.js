@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Grid, Input, Label, Tab } from 'semantic-ui-react';
+import { Container, Grid, Input, Tab } from 'semantic-ui-react';
 
 import { useSubstrate } from './substrate-lib';
 import { TxGroupButton } from './substrate-lib/components';
@@ -12,21 +12,12 @@ const argIsOptional = (arg) =>
 
 function Main (props) {
   const { api } = useSubstrate();
+  const { kittyTab, setKittyTab } = useKittyTab();
   const { accountPair } = props;
   const [status, setStatus] = useState(null);
 
   const interxType = 'EXTRINSIC';
-  const [callables, setCallables] = useState([]);
-  const x = Object.keys(api.tx.substratekitties).sort();
-
-  const updateCallables = () => {
-    if (!api) { return; }
-    const callables = Object.keys(api.tx.substratekitties).sort()
-      .map(c => ({ key: c, value: c, text: c }));
-    setCallables(callables);
-  };
-
-  const { kittyTab, setKittyTab } = useKittyTab();
+  const callables = Object.keys(api.tx.substratekitties).sort();
 
   const initFormState = {
     palletRpc: 'substratekitties',
@@ -74,11 +65,12 @@ function Main (props) {
     setParamFields(paramFields);
   };
 
-  useEffect(updateCallables, [api, interxType]);
   useEffect(updateParamFields, [api, interxType, palletRpc, callable]);
 
   const onPalletCallableParamChange = (_, data) => {
-    if (data.state === 'callable') setKittyTab(x[data.activeIndex - staticPanes.length]);
+    if (data.state === 'callable') {
+      setKittyTab(callables[data.activeIndex - staticPanes.length]);
+    }
 
     // static panes do not correspond to callables and come first
     if (data.activeIndex < staticPanes.length) {
@@ -96,16 +88,11 @@ function Main (props) {
         inputParams[ind] = { type, value };
         res = { ...formState, inputParams };
       } else if (state === 'callable') {
-        res = { ...formState, [state]: callables[data.activeIndex - staticPanes.length].value, inputParams: [] };
+        res = { ...formState, [state]: callables[data.activeIndex - staticPanes.length], inputParams: [] };
       }
       return res;
     });
   };
-
-  const getOptionalMsg = (interxType) =>
-    interxType === 'RPC'
-      ? 'Optional Parameter'
-      : 'Leaving this field as blank will submit a NONE value';
 
   const staticPanes = [
     {
@@ -122,30 +109,32 @@ function Main (props) {
       <Container>
         <Tab
           activeIndex={
-            x.indexOf(kittyTab) !== -1
-              ? x.indexOf(kittyTab) + staticPanes.length
+            callables.indexOf(kittyTab) !== -1
+              ? callables.indexOf(kittyTab) + staticPanes.length
               : 0
           }
           state='callable'
           onTabChange={onPalletCallableParamChange}
           panes={[
             ...staticPanes,
-            ...callables.map(c => {
+            ...callables.map(callable => {
               return {
                 menuItem: {
-                  name: c.text,
-                  key: c.text
+                  name: callable,
+                  key: callable
                 },
-                value: c.text,
+                value: callable,
                 render: () =>
                   <Grid>
                     <code>
-                      api.tx.substratekitties.{c.text}('
+                      api.tx.substratekitties.{callable}('
 
                       {initparamFields(kittyTab).map((paramField, ind) =>
                         <span key={ind}>
-
-                          <label>{paramField.name}</label>
+                          <label>
+                            {paramField.name}
+                            {!paramField.optional && <sup>*</sup>}
+                          </label>
                           <Input
                             placeholder={paramField.type}
                             type='text'
@@ -153,16 +142,6 @@ function Main (props) {
                             value={ inputParams[ind] ? inputParams[ind].value : '' }
                             onChange={onPalletCallableParamChange}
                           />
-                          { paramField.optional
-                            ? <Label
-                              basic
-                              pointing
-                              color='teal'
-                              content = { getOptionalMsg(interxType) }
-                            />
-                            : null
-                          }
-
                         </span>
                       )}
 

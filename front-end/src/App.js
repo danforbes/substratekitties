@@ -91,7 +91,7 @@ function Main () {
       <Sticky context={contextRef}>
         <AccountSelector setAccountAddress={setAccountAddress} />
       </Sticky>
-      <Container>
+      <Container style={{ marginBottom: '200px' }}>
         <Tab panes={panes} />
       </Container>
       <DeveloperConsole />

@@ -104,8 +104,8 @@ function dnaToAttributes (dna) {
 }
 
 export function KittyAvatar (props) {
-  const outerStyle = { height: '150px', position: 'relative', width: '50%' };
-  const innerStyle = { height: '150px', position: 'absolute', top: '0%', left: '50%' };
+  const outerStyle = { height: '170px', position: 'relative', width: '50%' };
+  const innerStyle = { height: '170px', position: 'absolute', top: '0%', left: '50%' };
 
   const cat = dnaToAttributes(props.dna.substr(2));
   return <div style={outerStyle}>
